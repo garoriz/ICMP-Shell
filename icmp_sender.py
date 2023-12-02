@@ -60,5 +60,5 @@ def calculate_checksum(data):
 
 
 if __name__ == '__main__':
-    host = '192.168.56.101'  # Хост для проверки доступности
+    host = '192.168.0.54'  # Хост для проверки доступности
     send_ping_request(host)
