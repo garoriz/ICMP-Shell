@@ -7,6 +7,7 @@ def reply_to_ping_request():
     # Создание сокета для приема ICMP пакетов
     sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname('icmp'))
     while True:
+        sock.bind(("192.168.0.54", 139))
         data, addr = sock.recvfrom(1024)
         ip_header = data[:20]  # Первые 20 байт - заголовок IP
         icmp_header = data[20:28]  # Следующие 8 байт - заголовок ICMP
