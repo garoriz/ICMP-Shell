@@ -2,47 +2,44 @@ import socket
 import struct
 import sys
 
+import ishell
+
 CNTRL_CEXIT = 1
 CNTRL_CPOUT = 2
-
-
-# Mock ish_info and sendhdr for demonstration purposes
-class ish_info:
-    id = 1515
-    type = 0
-    packetsize = 512
-    seq = 0
 
 
 class sendhdr:
     cntrl = 0
 
 
-def ish_send(sockfd, send_buf, sin):
-    datalen = struct.calcsize('!BBHHH') + struct.calcsize('!II') + len(send_buf)
-    datagram = bytearray(datalen)
+def ish_send(_sockfd, _send_buf, _sin):
+    ish_hdr_format = '!HI'
+    icmp_format = '!BBHHH'
 
-    icmph = struct.Struct('!BBHHH')
-    ish_hdr = struct.Struct('!II')
+    ish_hdr = struct.pack(ish_hdr_format, ishell.ish_info.type, ishell.ish_info.id)
+    icmp_data = struct.pack(icmp_format, ishell.ish_info.type, 0, ishell.ish_info.id, ishell.ish_info.seq, 0)
 
-    icmph.pack_into(datagram, 0, ish_info.type, 0, 0, ish_info.id, ish_info.seq)
-    ish_hdr.pack_into(datagram, struct.calcsize('!BBHHH'), sendhdr.cntrl, 0)
+    datagram = ish_hdr + _send_buf.encode('utf-8') + icmp_data
 
-    data_offset = struct.calcsize('!BBHHH') + struct.calcsize('!II')
-    datagram[data_offset:data_offset + len(send_buf)] = send_buf.encode()
+    icmp_cksum = in_cksum(datagram)
+    icmp_data = struct.pack(
+        icmp_format,
+        ishell.ish_info.type,
+        0,
+        ishell.ish_info.id,
+        ishell.ish_info.seq,
+        icmp_cksum
+    )
 
-    # Calculate ICMP checksum
-    icmph_checksum = struct.pack('!H', 0)
-    icmph_checksum = struct.pack('!H', sum(struct.unpack('!HHHHH', datagram[:10])) + sum(
-        struct.unpack('!HH' + str(len(send_buf)) + 's', datagram[16:] + b'\0' * (len(send_buf) % 2))))
+    datagram = ish_hdr + _send_buf.encode('utf-8') + icmp_data
 
-    datagram[10:12] = icmph_checksum
-
-    # Send the datagram
     try:
-        sockfd.sendto(datagram, sin)
+        _sockfd.sendto(datagram, _sin)
     except socket.error as e:
-        sys.exit(f"Error: {e}")
+        print(e)
+        return -1
+
+    return 0
 
 
 def ish_recv(sockfd, sin):
@@ -73,38 +70,28 @@ def ish_recv(sockfd, sin):
     return 0
 
 
-def error_msg():
-    print(f"Error: {errno}")
-
-
-def in_cksum(addr, length):
-    nleft = length
-    sum = 0
-    w = addr
-    answer = 0
+def in_cksum(data):
+    nleft = len(data)
+    _sum = 0
+    index = 0
 
     while nleft > 1:
-        sum += w[0]
-        sum = (sum & 0xFFFF) + (sum >> 16)
+        word = (data[index + 1] << 8) + data[index]
+        _sum += word
+        index += 2
         nleft -= 2
-        w = w[1:]
 
     if nleft == 1:
-        sum += ord(w[0])
+        _sum += data[-1]
 
-    sum = (sum >> 16) + (sum & 0xFFFF)
-    sum += (sum >> 16)
-    answer = ~sum & 0xFFFF
+    _sum = (_sum >> 16) + (_sum & 0xffff)
+    _sum += (_sum >> 16)
+
+    answer = ~_sum & 0xffff
     return answer
 
 
-# Mock socket creation for demonstration purposes
-sockfd = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-sin = ('example.com', 12345)  # Replace with actual address and port
-
-# Mock send_buf for demonstration purposes
-send_buf = "Hello, server!"
-
-ish_send(sockfd, send_buf, sin)
-result = ish_recv(sockfd, sin)
-print(result)
+# Example usage:
+# data = bytearray(b'example_data')  # Replace with your actual data
+# checksum = in_cksum(data)
+# print("Checksum:", checksum)

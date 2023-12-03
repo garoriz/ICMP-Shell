@@ -29,8 +29,9 @@ CNTRL_CEXIT = 1
 CNTRL_CPOUT = 2
 
 
-def error_msg() -> None:
-    print("Error message")
+def error_msg(strerror):
+    print(f"Error: {strerror}.")
+    sys.exit(-1)
 
 
 def in_cksum(data: bytes) -> int:
