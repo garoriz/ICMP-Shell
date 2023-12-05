@@ -42,29 +42,34 @@ def ish_send(_sockfd, _send_buf, _sin):
     return 0
 
 
-def ish_recv(sockfd, sin):
-    datalen = ish_info.packetsize + struct.calcsize('!BBHHH') + struct.calcsize('!II')
+def ish_recv(sockfd, recv_buf):
+    packetsize = ishell.ish_info.packetsize
+    datalen = packetsize + struct.calcsize('!BBHHH') + struct.calcsize('!HI')
+
     datagram = bytearray(datalen)
+    data_offset = struct.calcsize('!BBHHH') + struct.calcsize('!HI')
 
     try:
-        n, addr = sockfd.recvfrom_into(datagram, sizeof(datagram))
+        datagram, addr = sockfd.recvfrom(datalen)
     except socket.error as e:
-        sys.exit(f"Error: {e}")
+        print("Error receiving data:", e)
+        return -1
 
-    icmph = struct.unpack('!BBHHH', datagram[:8])
-    ish_hdr = struct.unpack('!II', datagram[8:16])
-    data = datagram[16:]
+    icmph = struct.unpack('!BBHHH', datagram[data_offset:data_offset + struct.calcsize('!BBHHH')])
+    recvhdr = struct.unpack('!BBHHHHIBBHHHHI',
+                            datagram[data_offset + struct.calcsize('!BBHHH'):data_offset + struct.calcsize('!HI')])
+    data = datagram[data_offset + struct.calcsize('!HI'):]
 
-    if icmph[3] != ish_info.id:
+    if icmph[3] != ishell.ish_info.id:
         return -1
 
     if recv_buf is not None:
         recv_buf.clear()
-        recv_buf.extend(data.decode())
+        recv_buf.extend(data[:len(data)].decode())
 
-    if ish_hdr[0] & CNTRL_CEXIT:
+    if recvhdr[1] & CNTRL_CEXIT:
         return CNTRL_CEXIT
-    elif ish_hdr[0] & CNTRL_CPOUT:
+    elif recvhdr[1] & CNTRL_CPOUT:
         return CNTRL_CPOUT
 
     return 0
@@ -89,7 +94,6 @@ def in_cksum(data):
 
     answer = ~_sum & 0xffff
     return answer
-
 
 # Example usage:
 # data = bytearray(b'example_data')  # Replace with your actual data

@@ -2,9 +2,11 @@ import argparse
 import signal
 import sys
 import socket
+import time
 
 import ish_main
 import ishell
+from util.Ticker import Ticker
 
 
 def ish_timeout():
@@ -18,7 +20,7 @@ def main():
     parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
     parser.add_argument('-t', help='Назначение типа пакетов ICMP (по-умолчанию 0)')
     parser.add_argument('-p', help='Назначение размера пакета (по-умолчанию 512)')
-    #parser.add_argument('host')
+    # parser.add_argument('host')
 
     args = parser.parse_args()
 
@@ -51,10 +53,11 @@ def main():
     if (ish_main.ish_send(sockfd, "id\n", sin)) < 0:
         print("Failed.\n")
 
-    signal.signal(signal.SIGALRM, ish_timeout)
+    if ish_main.ish_recv(sockfd, None) < 0:
+        print("Failed.\n")
+        sys.exit(-1)
 
-    timeout_seconds = 10
-    signal.alarm(timeout_seconds)
+    print("done.")
 
 
 if __name__ == '__main__':
