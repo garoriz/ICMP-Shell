@@ -4,10 +4,17 @@ import sys
 import socket
 import time
 
+from scapy.layers.inet import ICMP, IP
+from scapy.sendrecv import send
+
 import ish_main
 import ishell
 from util.Ticker import Ticker
 
+
+def send_icmp_with_data(target_ip, data):
+    packet = IP(dst=target_ip)/ICMP()/data
+    send(packet)
 
 def ish_timeout():
     print("failed.")
@@ -30,34 +37,39 @@ def main():
         ishell.ish_info.type = args.t
     if args.p:
         ishell.ish_info.packetsize = args.p
-    host = "127.0.0.1"
+    host = "192.168.0.54"
     try:
         host_string = socket.gethostbyname(host)
     except socket.gaierror:
         print("Error: Cannot resolve " + host + "!")
         sys.exit(-1)
 
-    try:
-        sockfd = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-    except socket.error as e:
-        print(e)
+    data_to_send = b"Hello, ICMP!"
 
-    ishell.sendhdr.cntrl = 0
-    ishell.sendhdr.cntrl |= ishell.CNTRL_CPOUT
+    send_icmp_with_data(host_string, data_to_send)
+    # try:
+    #    sockfd = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+    # except socket.error as e:
+    #    print(e)
 
-    print(f"ICMP Shell v{ishell.VERSION}  (client)")
-    print("--------------------------------------------------")
-    print(f"Connecting to {host}...")
 
-    sin = (host_string, 0)
-    if (ish_main.ish_send(sockfd, "id\n", sin)) < 0:
-        print("Failed.\n")
-
-    if ish_main.ish_recv(sockfd, None) < 0:
-        print("Failed.\n")
-        sys.exit(-1)
-
-    print("done.")
+#
+# ishell.sendhdr.cntrl = 0
+# ishell.sendhdr.cntrl |= ishell.CNTRL_CPOUT
+#
+# print(f"ICMP Shell v{ishell.VERSION}  (client)")
+# print("--------------------------------------------------")
+# print(f"Connecting to {host}...")
+#
+# sin = (host_string, 0)
+# if (ish_main.ish_send(sockfd, "id\n", sin)) < 0:
+#    print("Failed.\n")
+#
+# if ish_main.ish_recv(sockfd, None) < 0:
+#    print("Failed.\n")
+#    sys.exit(-1)
+#
+# print("done.")
 
 
 if __name__ == '__main__':
