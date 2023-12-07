@@ -44,7 +44,7 @@ def main():
         print("Error: Cannot resolve " + host + "!")
         sys.exit(-1)
 
-    data_to_send = b"Hello, ICMP!"
+    data_to_send = b"ipconfig"
 
     send_icmp_with_data(host_string, data_to_send)
     # try:

