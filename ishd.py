@@ -8,7 +8,7 @@ import signal
 import subprocess
 
 from scapy.layers.inet import ICMP, IP
-from scapy.sendrecv import sniff, send
+from scapy.sendrecv import sniff, send, sendp
 
 import ish_open
 import ishell
@@ -87,10 +87,10 @@ def packet_callback(packet):
         print(error)
         if output == '':
             reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0) / error
-            send(reply_packet)
+            sendp(reply_packet)
         else:
             reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0) / output
-            send(reply_packet)
+            sendp(reply_packet)
 
 
 def send_icmp_with_data(target_ip, data):

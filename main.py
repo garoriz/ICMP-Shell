@@ -7,7 +7,7 @@ import asyncio
 import time
 
 from scapy.layers.inet import ICMP, IP
-from scapy.sendrecv import send, sniff, sr1
+from scapy.sendrecv import send, sniff, sr1, sendp
 
 import ish_main
 import ish_open
@@ -93,7 +93,7 @@ def packet_callback(packet):
 
 
 async def main():
-    target_ip = "192.168.0.1"
+    target_ip = "192.168.0.19"
     data_to_send = input()
 
     send_task = asyncio.create_task(send_icmp(target_ip, data_to_send))
