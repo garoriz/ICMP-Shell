@@ -7,6 +7,7 @@ import asyncio
 import time
 
 from scapy.layers.inet import ICMP, IP
+from scapy.layers.l2 import Dot1Q, Ether
 from scapy.sendrecv import send, sniff, sr1, sendp
 
 import ish_main
@@ -18,6 +19,8 @@ from util.Ticker import Ticker
 async def send_icmp(target_ip, data):
     packet = IP(dst=target_ip) / ICMP() / data
     send(packet)
+    # x = Ether(src='f0:d4:15:84:6b:65', dst='08:00:27:0f:73:c0')
+    # sendp(x)
 
 
 async def receive_icmp():
@@ -93,13 +96,14 @@ def packet_callback(packet):
 
 
 async def main():
-    target_ip = "192.168.0.19"
-    data_to_send = input()
+    target_ip = "192.168.0.13"
+    while (True):
+        data_to_send = input()
 
-    send_task = asyncio.create_task(send_icmp(target_ip, data_to_send))
-    receive_task = asyncio.create_task(receive_icmp())
+        send_task = asyncio.create_task(send_icmp(target_ip, data_to_send))
+        receive_task = asyncio.create_task(receive_icmp())
 
-    await asyncio.gather(send_task, receive_task)
+        await asyncio.gather(send_task, receive_task)
 
 
 if __name__ == '__main__':
