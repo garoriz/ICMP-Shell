@@ -8,7 +8,7 @@ import time
 
 from scapy.layers.inet import ICMP, IP
 from scapy.layers.l2 import Dot1Q, Ether
-from scapy.sendrecv import send, sniff, sr1, sendp
+from scapy.sendrecv import send, sniff, sr1, sendp, AsyncSniffer
 
 import ish_main
 import ish_open
@@ -16,15 +16,15 @@ import ishell
 from util.Ticker import Ticker
 
 
-async def send_icmp(target_ip, data):
-    packet = IP(dst=target_ip) / ICMP() / data
+async def send_icmp(target_ip, data_to_send):
+    packet = IP(dst=target_ip) / ICMP(id=1515) / data_to_send
     send(packet)
     # x = Ether(src='f0:d4:15:84:6b:65', dst='08:00:27:0f:73:c0')
     # sendp(x)
 
 
 async def receive_icmp():
-    sniff(filter="icmp", prn=packet_callback)
+    sniff(filter="icmp", prn=packet_callback, timeout=1)
 
 
 def send_icmp_with_data(target_ip, data):
@@ -94,17 +94,16 @@ def packet_callback(packet):
 #
 # print("done.")
 
-
 async def main():
-    target_ip = "192.168.0.13"
-    while (True):
-        data_to_send = input()
-
-        send_task = asyncio.create_task(send_icmp(target_ip, data_to_send))
-        receive_task = asyncio.create_task(receive_icmp())
-
-        await asyncio.gather(send_task, receive_task)
+    target_ip = "192.168.0.133"
+    data_to_send = input()
+    send_task = asyncio.create_task(send_icmp(target_ip, data_to_send))
+    receive_task = asyncio.create_task(receive_icmp())
+    await asyncio.gather(send_task, receive_task)
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    print("ICMP Shell (client)")
+    print("-------------------")
+    while True:
+        asyncio.run(main())
