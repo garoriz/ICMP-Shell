@@ -27,6 +27,10 @@ async def receive_icmp():
     sniff(filter="icmp", prn=packet_callback, timeout=1)
 
 
+async def receive_hello_icmp():
+    sniff(filter="icmp", prn=hello_packet_callback, timeout=1)
+
+
 def send_icmp_with_data(target_ip, data):
     packet = IP(dst=target_ip) / ICMP() / data
     send(packet)
@@ -41,6 +45,14 @@ def packet_callback(packet):
     if ICMP in packet and packet[ICMP].type == 0:
         s = packet[ICMP].payload.load.decode('utf-8')
         print(packet[ICMP].payload.load.decode('utf-8'))
+
+
+def hello_packet_callback(packet):
+    if ICMP in packet and packet[ICMP].type == 0 and packet[ICMP].id == 151 and packet[ICMP].payload.load.decode(
+            'utf-8') == 'hello':
+        print("done.")
+    else:
+        print("failed.")
 
 
 # def main():
@@ -95,15 +107,55 @@ def packet_callback(packet):
 # print("done.")
 
 async def main():
-    target_ip = "192.168.0.133"
     data_to_send = input()
-    send_task = asyncio.create_task(send_icmp(target_ip, data_to_send))
+    send_task = asyncio.create_task(send_icmp(host, data_to_send))
     receive_task = asyncio.create_task(receive_icmp())
     await asyncio.gather(send_task, receive_task)
 
 
+async def check_connection():
+    data_to_send = 'echo hello'
+    send_task = asyncio.create_task(send_icmp(host, data_to_send))
+    receive_task = asyncio.create_task(receive_hello_icmp())
+    await asyncio.gather(send_task, receive_task)
+
+
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='ICMP Shell')
+
+    parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
+    parser.add_argument('-t', help='Назначение типа пакетов ICMP (по-умолчанию 0)')
+    parser.add_argument('-p', help='Назначение размера пакета (по-умолчанию 512)')
+    # parser.add_argument('host')
+
+    args = parser.parse_args()
+
+    if args.i:
+        ishell.ish_info.id = args.i
+    if args.t:
+        ishell.ish_info.type = args.t
+    if args.p:
+        ishell.ish_info.packetsize = args.p
+    host = "192.168.0.13"
+    try:
+        host_string = socket.gethostbyname(host)
+    except socket.gaierror:
+        print("Error: Cannot resolve " + host + "!")
+        sys.exit(-1)
+
     print("ICMP Shell (client)")
     print("-------------------")
+    print("Connecting to " + host + "...")
+
+    asyncio.run(check_connection())
+
     while True:
         asyncio.run(main())
+    # data_to_send = b"ipconfig"
+#
+# send_icmp_with_data(host_string, data_to_send)
+# sniff(filter="icmp", prn=packet_callback)
+# try:
+#    sockfd = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+# except socket.error as e:
+#    print(e)
