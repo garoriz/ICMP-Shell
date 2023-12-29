@@ -48,11 +48,9 @@ def packet_callback(packet):
 
 
 def hello_packet_callback(packet):
-    if ICMP in packet and packet[ICMP].type == 0 and packet[ICMP].id == 151 and packet[ICMP].payload.load.decode(
+    if ICMP in packet and packet[ICMP].type == 0 and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode(
             'utf-8') == 'hello':
         print("done.")
-    else:
-        print("failed.")
 
 
 # def main():
