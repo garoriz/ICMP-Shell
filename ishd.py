@@ -87,10 +87,10 @@ def packet_callback(packet):
         print(error)
         if output == '':
             reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / error
-            send(reply_packet)
+            send(reply_packet, verbose=False)
         else:
             reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / output
-            send(reply_packet)
+            send(reply_packet, verbose=False)
 
 
 def send_icmp_with_data(target_ip, data):

