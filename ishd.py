@@ -1,14 +1,8 @@
 import argparse
 import multiprocessing
 import os
-import socket
 import sys
-from multiprocessing import Process
 
-import servicemanager
-import win32event
-import win32service
-import win32serviceutil
 from scapy.layers.inet import IP, ICMP
 from scapy.sendrecv import sniff, send
 
