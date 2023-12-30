@@ -81,7 +81,7 @@ def packet_callback(packet):
         os.close(child_conn)
         process.communicate()
 
-        output = output.decode('cp866')
+        output = output.decode('cp866').strip()
         error = error.decode('cp866')
         print(output)
         print(error)
