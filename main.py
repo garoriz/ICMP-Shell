@@ -20,7 +20,7 @@ is_connected = False
 
 
 async def send_icmp(target_ip, data_to_send):
-    packet = IP(dst=target_ip) / ICMP(type=0, id=1515) / data_to_send
+    packet = IP(dst=target_ip) / ICMP(id=1515) / data_to_send
     send(packet, verbose=False)
     # x = Ether(src='f0:d4:15:84:6b:65', dst='08:00:27:0f:73:c0')
     # sendp(x)
@@ -122,41 +122,63 @@ async def check_connection():
     receive_task = asyncio.create_task(receive_hello_icmp())
     await asyncio.gather(send_task, receive_task)
 
+def client():
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect(('localhost', 12345))
+
+    s = ("Настройка протокола IP для WindowsАдаптер Ethernet Ethernet 3:DNS-суффикс подключения . . . . . : Локальный "
+         "IPv6-адрес канала . . . : fe80::9d67:8cf2:b90c:7a22%20IPv4-адрес. . . . . . . . . . . . : 192.168.56.1"
+         "Маска подсети . . . . . . . . . . : 255.255.255.0)Основной шлюз. . . . . . . . . :Адаптер беспроводной лока"
+         "льной сети Подключение по локальной сети* 1:Состояние среды. . . . . . . . : Среда передачи недоступна."
+         "DNS-суффикс подключения . . . . . :Адаптер беспроводной локальной сети Подключение по локальной сети* 2:"
+         "Состояние среды. . . . . . . . : Среда передачи недоступна.DNS-суффикс подключения . . . . . :Адаптер"
+         " Ethernet Ethernet 2:Состояние среды. . . . . . . . : Среда передачи недоступна.DNS-суффикс подключе"
+         "ния . . . . . :Адаптер беспроводной локальной сети Беспроводная сеть:DNS-суффикс подключения . . . . "
+         ". : DlinkЛокальный IPv6-адрес канала . . . : fe80::580c:94c3:8362:3fc9%3IPv4-адрес. . . . . . . . . "
+         ". . . : 192.168.0.54Маска подсети . . . . . . . . . . : 255.255.255.0Основной шлюз. . . . . . . . . :"
+         " fe80::7a32:1bff:fe64:e0a3%3192.168.0.1")
+    data_to_send = s
+    packet = IP(dst="192.168.0.13") / ICMP(type=0, id=1515) / "data_to_send"
+    packet_bytes = bytes(packet)
+    client_socket.send(packet_bytes)
+
+    client_socket.close()
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='ICMP Shell')
-
-    parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
-    parser.add_argument('-t', help='Назначение типа пакетов ICMP (по-умолчанию 0)')
-    parser.add_argument('-p', help='Назначение размера пакета (по-умолчанию 512)')
-    # parser.add_argument('host')
-
-    args = parser.parse_args()
-
-    if args.i:
-        ishell.ish_info.id = args.i
-    if args.t:
-        ishell.ish_info.type = args.t
-    if args.p:
-        ishell.ish_info.packetsize = args.p
-    host = "192.168.0.54"
-    try:
-        host_string = socket.gethostbyname(host)
-    except socket.gaierror:
-        print("Error: Cannot resolve " + host + "!")
-        sys.exit(-1)
-
-    print("ICMP Shell (client)")
-    print("-------------------")
-    print("Connecting to " + host + "...")
-
-    asyncio.run(check_connection())
-
-    while is_connected:
-        asyncio.run(main())
-
-    if not is_connected:
-        print("failed.")
+    client()
+    #parser = argparse.ArgumentParser(description='ICMP Shell')
+#
+    #parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
+    #parser.add_argument('-t', help='Назначение типа пакетов ICMP (по-умолчанию 0)')
+    #parser.add_argument('-p', help='Назначение размера пакета (по-умолчанию 512)')
+    ## parser.add_argument('host')
+#
+    #args = parser.parse_args()
+#
+    #if args.i:
+    #    ishell.ish_info.id = args.i
+    #if args.t:
+    #    ishell.ish_info.type = args.t
+    #if args.p:
+    #    ishell.ish_info.packetsize = args.p
+    #host = "192.168.0.13"
+    #try:
+    #    host_string = socket.gethostbyname(host)
+    #except socket.gaierror:
+    #    print("Error: Cannot resolve " + host + "!")
+    #    sys.exit(-1)
+#
+    #print("ICMP Shell (client)")
+    #print("-------------------")
+    #print("Connecting to " + host + "...")
+#
+    #asyncio.run(check_connection())
+#
+    #while is_connected:
+    #    asyncio.run(main())
+#
+    #if not is_connected:
+    #    print("failed.")
     # data_to_send = b"ipconfig"
 #
 # send_icmp_with_data(host_string, data_to_send)

