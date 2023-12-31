@@ -16,8 +16,8 @@ import ish_open
 import ishell
 from util.Ticker import Ticker
 
-
 is_connected = False
+
 
 async def send_icmp(target_ip, data_to_send):
     packet = IP(dst=target_ip) / ICMP(type=0, id=1515) / data_to_send
@@ -47,7 +47,7 @@ def ish_timeout():
 def packet_callback(packet):
     if ICMP in packet and packet[ICMP].id == 1515:
         s = packet[ICMP].payload.load.decode('utf-8')
-        print(packet[ICMP].payload.load.decode('utf-8'))
+        print(packet[ICMP].payload.load.decode('utf-8'), end='')
 
 
 def hello_packet_callback(packet):
