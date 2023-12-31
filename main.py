@@ -122,6 +122,7 @@ async def check_connection():
     receive_task = asyncio.create_task(receive_hello_icmp())
     await asyncio.gather(send_task, receive_task)
 
+
 def client():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect(('localhost', 12345))
@@ -144,40 +145,40 @@ def client():
 
     client_socket.close()
 
+
 if __name__ == '__main__':
-    client()
-    #parser = argparse.ArgumentParser(description='ICMP Shell')
-#
-    #parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
-    #parser.add_argument('-t', help='Назначение типа пакетов ICMP (по-умолчанию 0)')
-    #parser.add_argument('-p', help='Назначение размера пакета (по-умолчанию 512)')
-    ## parser.add_argument('host')
-#
-    #args = parser.parse_args()
-#
-    #if args.i:
-    #    ishell.ish_info.id = args.i
-    #if args.t:
-    #    ishell.ish_info.type = args.t
-    #if args.p:
-    #    ishell.ish_info.packetsize = args.p
-    #host = "192.168.0.13"
-    #try:
-    #    host_string = socket.gethostbyname(host)
-    #except socket.gaierror:
-    #    print("Error: Cannot resolve " + host + "!")
-    #    sys.exit(-1)
-#
-    #print("ICMP Shell (client)")
-    #print("-------------------")
-    #print("Connecting to " + host + "...")
-#
-    #asyncio.run(check_connection())
-#
-    #while is_connected:
-    #    asyncio.run(main())
-#
-    #if not is_connected:
+    parser = argparse.ArgumentParser(description='ICMP Shell')
+
+    parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
+    parser.add_argument('-t', help='Назначение типа пакетов ICMP (по-умолчанию 0)')
+    parser.add_argument('-p', help='Назначение размера пакета (по-умолчанию 512)')
+    # parser.add_argument('host')
+
+    args = parser.parse_args()
+
+    if args.i:
+        ishell.ish_info.id = args.i
+    if args.t:
+        ishell.ish_info.type = args.t
+    if args.p:
+        ishell.ish_info.packetsize = args.p
+    host = "192.168.0.13"
+    try:
+        host_string = socket.gethostbyname(host)
+    except socket.gaierror:
+        print("Error: Cannot resolve " + host + "!")
+        sys.exit(-1)
+
+    print("ICMP Shell (client)")
+    print("-------------------")
+    print("Connecting to " + host + "...")
+
+    asyncio.run(check_connection())
+
+    while is_connected:
+        asyncio.run(main())
+
+    # if not is_connected:
     #    print("failed.")
     # data_to_send = b"ipconfig"
 #
