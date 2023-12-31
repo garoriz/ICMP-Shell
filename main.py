@@ -53,7 +53,7 @@ def packet_callback(packet):
 def hello_packet_callback(packet):
     global is_connected
     if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode(
-            'utf-8') == 'hello\n':
+            'utf-8').strip() == 'hello':
         is_connected = True
         print("done.")
 
