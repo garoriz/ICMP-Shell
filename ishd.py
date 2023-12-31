@@ -205,10 +205,10 @@ class Service(win32serviceutil.ServiceFramework):
 
 
 if __name__ == '__main__':
-    # main()
-    if len(sys.argv) == 1:
-        servicemanager.Initialize()
-        servicemanager.PrepareToHostSingle(Service)
-        servicemanager.StartServiceCtrlDispatcher()
-    else:
-        win32serviceutil.HandleCommandLine(Service)
+    main()
+    #if len(sys.argv) == 1:
+    #    servicemanager.Initialize()
+    #    servicemanager.PrepareToHostSingle(Service)
+    #    servicemanager.StartServiceCtrlDispatcher()
+    #else:
+    #    win32serviceutil.HandleCommandLine(Service)
