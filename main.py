@@ -27,11 +27,11 @@ async def send_icmp(target_ip, data_to_send):
 
 
 async def receive_icmp():
-    sniff(filter="icmp", prn=packet_callback, timeout=1)
+    sniff(filter="icmp", prn=packet_callback, timeout=1, store=True)
 
 
 async def receive_hello_icmp():
-    sniff(filter="icmp", prn=hello_packet_callback, timeout=1)
+    sniff(filter="icmp", prn=hello_packet_callback, timeout=1, store=True)
 
 
 def send_icmp_with_data(target_ip, data):
@@ -139,7 +139,7 @@ if __name__ == '__main__':
         ishell.ish_info.type = args.t
     if args.p:
         ishell.ish_info.packetsize = args.p
-    host = "192.168.0.13"
+    host = "192.168.0.54"
     try:
         host_string = socket.gethostbyname(host)
     except socket.gaierror:
