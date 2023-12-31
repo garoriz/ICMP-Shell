@@ -4,6 +4,7 @@ import signal
 import sys
 import socket
 import asyncio
+import threading
 import time
 
 from scapy.layers.inet import ICMP, IP
@@ -18,9 +19,8 @@ from util.Ticker import Ticker
 
 is_connected = False
 
-
 async def send_icmp(target_ip, data_to_send):
-    packet = IP(dst=target_ip) / ICMP(id=1515) / data_to_send
+    packet = IP(dst=target_ip) / ICMP(type=0, id=1515) / data_to_send
     send(packet, verbose=False)
     # x = Ether(src='f0:d4:15:84:6b:65', dst='08:00:27:0f:73:c0')
     # sendp(x)
@@ -45,14 +45,14 @@ def ish_timeout():
 
 
 def packet_callback(packet):
-    if ICMP in packet and packet[ICMP].type == 0:
+    if ICMP in packet and packet[ICMP].id == 1515:
         s = packet[ICMP].payload.load.decode('utf-8')
         print(packet[ICMP].payload.load.decode('utf-8'))
 
 
 def hello_packet_callback(packet):
     global is_connected
-    if ICMP in packet and packet[ICMP].type == 0 and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode(
+    if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode(
             'utf-8') == 'hello':
         is_connected = True
         print("done.")
