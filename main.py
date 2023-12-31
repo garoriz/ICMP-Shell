@@ -27,11 +27,11 @@ async def send_icmp(target_ip, data_to_send):
 
 
 async def receive_icmp():
-    sniff(filter="icmp", prn=packet_callback, timeout=1, store=False)
+    sniff(filter="icmp", prn=packet_callback, timeout=1)
 
 
 async def receive_hello_icmp():
-    sniff(filter="icmp", prn=hello_packet_callback, timeout=1, store=False)
+    sniff(filter="icmp", prn=hello_packet_callback, timeout=1)
 
 
 def send_icmp_with_data(target_ip, data):
