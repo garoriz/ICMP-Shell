@@ -1,23 +1,52 @@
-def split_string_by_bytes(input_string, byte_length):
-    utf8_bytes = input_string
-    byte_chunks = [utf8_bytes[i:i+byte_length] for i in range(0, len(utf8_bytes), byte_length)]
-    return byte_chunks
+import asyncio
+import subprocess
+import sys
+import threading
+import time
+from threading import Thread
+
+import pexpect
+from Demos.print_desktop import p
 
 
-if __name__ == '__main__':
-    s = ("Настройка протокола IP для WindowsАдаптер Ethernet Ethernet 3:DNS-суффикс подключения . . . . . : Локальный "
-         "IPv6-адрес канала . . . : fe80::9d67:8cf2:b90c:7a22%20IPv4-адрес. . . . . . . . . . . . : 192.168.56.1"
-         "Маска подсети . . . . . . . . . . : 255.255.255.0)Основной шлюз. . . . . . . . . :Адаптер беспроводной лока"
-         "льной сети Подключение по локальной сети* 1:Состояние среды. . . . . . . . : Среда передачи недоступна."
-         "DNS-суффикс подключения . . . . . :Адаптер беспроводной локальной сети Подключение по локальной сети* 2:"
-         "Состояние среды. . . . . . . . : Среда передачи недоступна.DNS-суффикс подключения . . . . . :Адаптер"
-         " Ethernet Ethernet 2:Состояние среды. . . . . . . . : Среда передачи недоступна.DNS-суффикс подключе"
-         "ния . . . . . :Адаптер беспроводной локальной сети Беспроводная сеть:DNS-суффикс подключения . . . . "
-         ". : DlinkЛокальный IPv6-адрес канала . . . : fe80::580c:94c3:8362:3fc9%3IPv4-адрес. . . . . . . . . "
-         ". . . : 192.168.0.54Маска подсети . . . . . . . . . . : 255.255.255.0Основной шлюз. . . . . . . . . :"
-         " fe80::7a32:1bff:fe64:e0a3%3192.168.0.1")
-    byte_length = 5
-    result = split_string_by_bytes(s, 100)
+def readstdout():
+    for l in iter(p.stdout.readline, b""):
+        sys.stdout.write(f'{l.decode("utf-8", "backslashreplace")}\n')
 
-    my_bytes = len(s.encode('utf-8'))
-    print(my_bytes)
+# Function to read and print stderr of the subprocess
+def readstderr():
+    for l in iter(p.stderr.readline, b""):
+        sys.stderr.write(f'{l.decode("utf-8", "backslashreplace")}\n')
+
+# Function to send a command to the subprocess
+def sendcommand(cmd):
+    p.stdin.write(cmd.encode() + b"\n")
+    p.stdin.flush()
+
+if __name__ == "__main__":
+    p = subprocess.Popen(
+        "cmd.exe",
+        stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    # Create two threads to read and print stdout and stderr concurrently
+    t1 = threading.Thread(target=readstdout)
+    t2 = threading.Thread(target=readstderr)
+
+    # Start the threads to capture and print the subprocess output
+    t1.start()
+    t2.start()
+
+    # Send a command to the subprocess
+    sendcommand("echo hello")
+    sendcommand("cd..")
+    sendcommand("dir")
+    #cat = subprocess.Popen('cmd.exe', shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
+    #cat.stdin.flush()
+    #print(cat.stdout.readlines())
+    #cat.stdin.write(b"ipconfig\n")
+    #cat.stdin.flush()
+    #print(cat.stdout.readline().decode('cp866'))
