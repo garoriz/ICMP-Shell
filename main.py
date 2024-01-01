@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
     asyncio.run(check_connection())
 
-    while is_connected:
+    while True:
         asyncio.run(main())
     #
     if not is_connected:

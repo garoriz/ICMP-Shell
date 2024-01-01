@@ -40,7 +40,8 @@ def readstdout():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = Ether(src=source_mac, dst=destination_mac) / IP(src=source_ip, dst=destination_ip) / ICMP(type=0, id=1515) / string
+        reply_packet = Ether(src=source_mac, dst=destination_mac) / IP(src=source_ip, dst=destination_ip) / ICMP(type=0,
+                                                                                                                 id=1515) / string
         sendp(reply_packet, verbose=False)
         sys.stdout.write(string + "\n")
 
@@ -289,10 +290,10 @@ def server():
 
 
 if __name__ == '__main__':
-    #main()
-     if len(sys.argv) == 1:
-       servicemanager.Initialize()
-       servicemanager.PrepareToHostSingle(Service)
-       servicemanager.StartServiceCtrlDispatcher()
-     else:
-       win32serviceutil.HandleCommandLine(Service)
+    main()
+    # if len(sys.argv) == 1:
+    #  servicemanager.Initialize()
+    #  servicemanager.PrepareToHostSingle(Service)
+    #  servicemanager.StartServiceCtrlDispatcher()
+    # else:
+    #  win32serviceutil.HandleCommandLine(Service)
