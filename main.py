@@ -47,13 +47,12 @@ def ish_timeout():
 def packet_callback(packet):
     if ICMP in packet and packet[ICMP].id == 1515:
         s = packet[ICMP].payload.load.decode('utf-8')
-        print(packet[ICMP].payload.load.decode('utf-8'), end='')
+        print(packet[ICMP].payload.load.decode('utf-8'))
 
 
 def hello_packet_callback(packet):
     global is_connected
-    if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode(
-            'utf-8') == 'hello':
+    if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode('utf-8') == 'hello':
         is_connected = True
         print("done.")
 

