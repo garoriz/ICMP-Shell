@@ -1,19 +1,40 @@
 import subprocess
+import sys
+import threading
+
+p = subprocess.Popen(
+    "bash",
+    stdout=subprocess.PIPE,
+    stdin=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    shell=True
+)
+
+
+def readstdout():
+    for l in iter(p.stdout.readline, b""):
+        string = f'{l.decode("cp866", "backslashreplace")}'.strip()
+        if string == '':
+            continue
+        sys.stdout.write(string + "\n")
+
+
+# Function to read and print stderr of the subprocess
+def readstderr():
+    for l in iter(p.stderr.readline, b""):
+        string = f'{l.decode("cp866", "backslashreplace")}'.strip()
+        sys.stderr.write(string + "\n")
+
+def sendcommand(cmd):
+    p.stdin.write(cmd.encode() + b"\n")
+    p.stdin.flush()
 
 if __name__ == "__main__":
-    command = "bash"
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
-                               shell=True)
+    t1 = threading.Thread(target=readstdout)
+    t2 = threading.Thread(target=readstderr)
 
-    # Пример отправки команды
-    command_to_send = "ls -l"
-    process.stdin.write(command_to_send.encode('utf-8'))
-    process.stdin.write(b'\n')  # Добавляем новую строку, если нужно
-
-    # Получить вывод
-    output, errors = process.communicate()
-
-    # Декодируем вывод в строку
-    output_str = output.decode('utf-8')
-
-    print(output_str)
+    t1.start()
+    t2.start()
+    while True:
+        s = input()
+        sendcommand(s)
