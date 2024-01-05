@@ -1,24 +1,12 @@
 import argparse
-import concurrent
-import multiprocessing
-import os
 import socket
-import subprocess
 import sys
-import threading
-import time
 
-import servicemanager
-import win32event
-import win32service
 from scapy.layers.inet import IP, ICMP
 from scapy.layers.l2 import Ether
-from scapy.sendrecv import sniff, send, sendp
-from win32con import DETACHED_PROCESS
+from scapy.sendrecv import sniff, send
 
-import ish_open
 import ishell
-import win32serviceutil
 
 output = None
 error = None
@@ -151,44 +139,44 @@ def main():
 #        f.write('shut down \n')
 #        f.close()
 
-class Service(win32serviceutil.ServiceFramework):
-    _svc_name_ = "Service"
-    _svc_display_name_ = "Service"
-
-    def __init__(self, args):
-        win32serviceutil.ServiceFramework.__init__(self, *args)
-        self.log('Service Initialized.')
-        self.stop_event = win32event.CreateEvent(None, 0, 0, None)
-
-    def log(self, msg):
-        servicemanager.LogInfoMsg(str(msg))
-
-    def SvcStop(self):
-        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-        self.log('Service has stopped.')
-        win32event.SetEvent(self.stop_event)
-        self.ReportServiceStatus(win32service.SERVICE_STOPPED)
-
-    def SvcDoRun(self):
-        self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
-        try:
-            self.ReportServiceStatus(win32service.SERVICE_RUNNING)
-            self.log('Service is starting.')
-            self.main()
-            win32event.WaitForSingleObject(self.stop_event, win32event.INFINITE)
-            servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE, servicemanager.PYS_SERVICE_STARTED,
-                                  (self._svc_name_, ''))
-        except Exception as e:
-            s = str(e)
-            self.log('Exception :' + s)
-
-    def main(self):
-        t1 = threading.Thread(target=readstdout)
-        t2 = threading.Thread(target=readstderr)
-
-        t1.start()
-        t2.start()
-        sniff(filter="icmp", prn=packet_callback)
+#class Service(win32serviceutil.ServiceFramework):
+#    _svc_name_ = "Service"
+#    _svc_display_name_ = "Service"
+#
+#    def __init__(self, args):
+#        win32serviceutil.ServiceFramework.__init__(self, *args)
+#        self.log('Service Initialized.')
+#        self.stop_event = win32event.CreateEvent(None, 0, 0, None)
+#
+#    def log(self, msg):
+#        servicemanager.LogInfoMsg(str(msg))
+#
+#    def SvcStop(self):
+#        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
+#        self.log('Service has stopped.')
+#        win32event.SetEvent(self.stop_event)
+#        self.ReportServiceStatus(win32service.SERVICE_STOPPED)
+#
+#    def SvcDoRun(self):
+#        self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
+#        try:
+#            self.ReportServiceStatus(win32service.SERVICE_RUNNING)
+#            self.log('Service is starting.')
+#            self.main()
+#            win32event.WaitForSingleObject(self.stop_event, win32event.INFINITE)
+#            servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE, servicemanager.PYS_SERVICE_STARTED,
+#                                  (self._svc_name_, ''))
+#        except Exception as e:
+#            s = str(e)
+#            self.log('Exception :' + s)
+#
+#    def main(self):
+#        t1 = threading.Thread(target=readstdout)
+#        t2 = threading.Thread(target=readstderr)
+#
+#        t1.start()
+#        t2.start()
+#        sniff(filter="icmp", prn=packet_callback)
 
 
 def server():
