@@ -1,4 +1,5 @@
 import argparse
+import platform
 import socket
 import subprocess
 import sys
@@ -12,6 +13,11 @@ import ishell
 
 output = None
 error = None
+os_name = platform.system()
+if os_name == "Windows":
+    terminal_name = "cmd.exe"
+if os_name == "":
+    terminal_name = "bash"
 p = subprocess.Popen(
     "bash",
     stdout=subprocess.PIPE,
