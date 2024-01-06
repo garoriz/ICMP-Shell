@@ -12,6 +12,7 @@ import ishell
 
 is_connected = None
 host = "192.168.0.60"
+data_to_send = None
 
 
 def wait_connection():
@@ -23,12 +24,12 @@ def wait_connection():
 
 
 def send_icmp_with_data():
-    global host
+    global host, data_to_send
     data_to_send = 'echo hello'
     packet = IP(dst=host) / ICMP(id=1515) / data_to_send
     send(packet, verbose=False)
 
-    wait_connection()
+    time.sleep(10)
 
     while is_connected:
         data_to_send = input()
@@ -84,7 +85,7 @@ async def receive_hello_icmp():
 def packet_callback(packet):
     global is_connected
 
-    if ICMP in packet and packet[ICMP].id == 1515:
+    if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode('utf-8') != data_to_send:
         print(packet[ICMP].payload.load.decode('utf-8'))
 
 
