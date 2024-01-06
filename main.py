@@ -11,7 +11,7 @@ from scapy.sendrecv import send, sniff
 import ishell
 
 is_connected = None
-host = "192.168.0.54"
+host = "192.168.0.60"
 
 
 def wait_connection():
@@ -37,7 +37,12 @@ def send_icmp_with_data():
 
 
 def receive_icmp_with_data():
-    wait_connection()
+    sniff(filter="icmp", prn=hello_packet_callback, timeout=10)
+
+    if not is_connected:
+        sys.exit()
+
+    print("done.")
 
     sniff(filter="icmp", prn=packet_callback)
 
@@ -80,18 +85,13 @@ def packet_callback(packet):
     global is_connected
 
     if ICMP in packet and packet[ICMP].id == 1515:
-        if is_connected:
-            print(packet[ICMP].payload.load.decode('utf-8'))
-        elif packet[ICMP].payload.load.decode('utf-8') == 'hello':
-            is_connected = True
-            print("done.")
+        print(packet[ICMP].payload.load.decode('utf-8'))
 
 
 def hello_packet_callback(packet):
     global is_connected
     if ICMP in packet and packet[ICMP].id == 1515 and packet[ICMP].payload.load.decode('utf-8') == 'hello':
         is_connected = True
-        print("done.")
 
 
 async def main():
@@ -124,7 +124,7 @@ if __name__ == '__main__':
         ishell.ish_info.type = args.t
     if args.p:
         ishell.ish_info.packetsize = args.p
-    host = "192.168.0.54"
+    host = "192.168.0.60"
     try:
         host_string = socket.gethostbyname(host)
     except socket.gaierror:
@@ -137,15 +137,20 @@ if __name__ == '__main__':
 
     t1 = threading.Thread(target=send_icmp_with_data)
     #t2 = threading.Thread(target=receive_icmp_with_data)
-    t3 = threading.Thread(target=check_connection)
+    #t3 = threading.Thread(target=check_connection)
 
     t1.start()
     #t2.start()
-    t3.start()
+    #t3.start()
 
-    wait_connection()
+    sniff(filter="icmp", prn=hello_packet_callback, timeout=10)
 
-    sniff(filter="icmp", prn=packet_callback)
+    if is_connected is None:
+        is_connected = False
+        print("failed.")
+    elif is_connected:
+        print("done.")
+        sniff(filter="icmp", prn=packet_callback)
 
     # asyncio.run(check_connection())
 #
