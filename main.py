@@ -1,22 +1,63 @@
 import argparse
-import os
-import signal
-import sys
-import socket
 import asyncio
+import socket
+import sys
 import threading
 import time
 
 from scapy.layers.inet import ICMP, IP
-from scapy.layers.l2 import Dot1Q, Ether
-from scapy.sendrecv import send, sniff, sr1, sendp, AsyncSniffer
+from scapy.sendrecv import send, sniff
 
-import ish_main
-import ish_open
 import ishell
-from util.Ticker import Ticker
 
-is_connected = False
+is_connected = None
+host = "192.168.0.54"
+
+
+def wait_connection():
+    while True:
+        if not is_connected:
+            sys.exit()
+        elif is_connected:
+            break
+
+
+def send_icmp_with_data():
+    global host
+    data_to_send = 'echo hello'
+    packet = IP(dst=host) / ICMP(id=1515) / data_to_send
+    send(packet, verbose=False)
+
+    wait_connection()
+
+    while is_connected:
+        data_to_send = input()
+        packet = IP(dst=host) / ICMP(id=1515) / data_to_send
+        send(packet, verbose=False)
+
+
+def receive_icmp_with_data():
+    wait_connection()
+
+    sniff(filter="icmp", prn=packet_callback)
+
+
+def check_connection():
+    global is_connected
+    timeout = 10
+    start_time = time.time()
+
+    while True:
+        if is_connected:
+            break
+
+        elapsed_time = time.time() - start_time
+        if elapsed_time >= timeout and is_connected is None:
+            is_connected = False
+            print("failed.")
+            sys.exit()
+
+        time.sleep(1)
 
 
 async def send_icmp(target_ip, data_to_send):
@@ -35,20 +76,15 @@ async def receive_hello_icmp():
     sniff(filter="icmp", prn=hello_packet_callback, timeout=3)
 
 
-def send_icmp_with_data(target_ip, data):
-    packet = IP(dst=target_ip) / ICMP() / data
-    send(packet)
-
-
-def ish_timeout():
-    print("failed.")
-    sys.exit(-1)
-
-
 def packet_callback(packet):
+    global is_connected
+
     if ICMP in packet and packet[ICMP].id == 1515:
-        s = packet[ICMP].payload.load.decode('utf-8')
-        print(packet[ICMP].payload.load.decode('utf-8'))
+        if is_connected:
+            print(packet[ICMP].payload.load.decode('utf-8'))
+        elif packet[ICMP].payload.load.decode('utf-8') == 'hello':
+            is_connected = True
+            print("done.")
 
 
 def hello_packet_callback(packet):
@@ -58,57 +94,6 @@ def hello_packet_callback(packet):
         print("done.")
 
 
-# def main():
-#    parser = argparse.ArgumentParser(description='ICMP Shell')
-#
-#    parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
-#    parser.add_argument('-t', help='Назначение типа пакетов ICMP (по-умолчанию 0)')
-#    parser.add_argument('-p', help='Назначение размера пакета (по-умолчанию 512)')
-#    # parser.add_argument('host')
-#
-#    args = parser.parse_args()
-#
-#    if args.i:
-#        ishell.ish_info.id = args.i
-#    if args.t:
-#        ishell.ish_info.type = args.t
-#    if args.p:
-#        ishell.ish_info.packetsize = args.p
-#    host = "192.168.0.1"
-#    try:
-#        host_string = socket.gethostbyname(host)
-#    except socket.gaierror:
-#        print("Error: Cannot resolve " + host + "!")
-#        sys.exit(-1)
-#
-#    data_to_send = b"ipconfig"
-#
-#    send_icmp_with_data(host_string, data_to_send)
-#    sniff(filter="icmp", prn=packet_callback)
-#    # try:
-#    #    sockfd = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-#    # except socket.error as e:
-#    #    print(e)
-
-
-#
-# ishell.sendhdr.cntrl = 0
-# ishell.sendhdr.cntrl |= ishell.CNTRL_CPOUT
-#
-# print(f"ICMP Shell v{ishell.VERSION}  (client)")
-# print("--------------------------------------------------")
-# print(f"Connecting to {host}...")
-#
-# sin = (host_string, 0)
-# if (ish_main.ish_send(sockfd, "id\n", sin)) < 0:
-#    print("Failed.\n")
-#
-# if ish_main.ish_recv(sockfd, None) < 0:
-#    print("Failed.\n")
-#    sys.exit(-1)
-#
-# print("done.")
-
 async def main():
     data_to_send = input()
     send_task = asyncio.create_task(send_icmp(host, data_to_send))
@@ -116,34 +101,11 @@ async def main():
     await asyncio.gather(send_task, receive_task)
 
 
-async def check_connection():
-    data_to_send = 'echo hello'
-    send_task = asyncio.create_task(send_icmp(host, data_to_send))
-    receive_task = asyncio.create_task(receive_hello_icmp())
-    await asyncio.gather(send_task, receive_task)
-
-
-def client():
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect(('localhost', 12345))
-
-    s = ("Настройка протокола IP для WindowsАдаптер Ethernet Ethernet 3:DNS-суффикс подключения . . . . . : Локальный "
-         "IPv6-адрес канала . . . : fe80::9d67:8cf2:b90c:7a22%20IPv4-адрес. . . . . . . . . . . . : 192.168.56.1"
-         "Маска подсети . . . . . . . . . . : 255.255.255.0)Основной шлюз. . . . . . . . . :Адаптер беспроводной лока"
-         "льной сети Подключение по локальной сети* 1:Состояние среды. . . . . . . . : Среда передачи недоступна."
-         "DNS-суффикс подключения . . . . . :Адаптер беспроводной локальной сети Подключение по локальной сети* 2:"
-         "Состояние среды. . . . . . . . : Среда передачи недоступна.DNS-суффикс подключения . . . . . :Адаптер"
-         " Ethernet Ethernet 2:Состояние среды. . . . . . . . : Среда передачи недоступна.DNS-суффикс подключе"
-         "ния . . . . . :Адаптер беспроводной локальной сети Беспроводная сеть:DNS-суффикс подключения . . . . "
-         ". : DlinkЛокальный IPv6-адрес канала . . . : fe80::580c:94c3:8362:3fc9%3IPv4-адрес. . . . . . . . . "
-         ". . . : 192.168.0.54Маска подсети . . . . . . . . . . : 255.255.255.0Основной шлюз. . . . . . . . . :"
-         " fe80::7a32:1bff:fe64:e0a3%3192.168.0.1")
-    data_to_send = s
-    packet = IP(dst="192.168.0.13") / ICMP(type=0, id=1515) / "data_to_send"
-    packet_bytes = bytes(packet)
-    client_socket.send(packet_bytes)
-
-    client_socket.close()
+# async def check_connection():
+#    data_to_send = 'echo hello'
+#    send_task = asyncio.create_task(send_icmp(host, data_to_send))
+#    receive_task = asyncio.create_task(receive_hello_icmp())
+#    await asyncio.gather(send_task, receive_task)
 
 
 if __name__ == '__main__':
@@ -173,18 +135,22 @@ if __name__ == '__main__':
     print("-------------------")
     print("Connecting to " + host + "...")
 
-    asyncio.run(check_connection())
+    t1 = threading.Thread(target=send_icmp_with_data)
+    #t2 = threading.Thread(target=receive_icmp_with_data)
+    t3 = threading.Thread(target=check_connection)
 
-    while is_connected:
-        asyncio.run(main())
-    #
-    if not is_connected:
-        print("failed.")
-    # data_to_send = b"ipconfig"
+    t1.start()
+    #t2.start()
+    t3.start()
+
+    wait_connection()
+
+    sniff(filter="icmp", prn=packet_callback)
+
+    # asyncio.run(check_connection())
 #
-# send_icmp_with_data(host_string, data_to_send)
-# sniff(filter="icmp", prn=packet_callback)
-# try:
-#    sockfd = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-# except socket.error as e:
-#    print(e)
+# while is_connected:
+#    asyncio.run(main())
+##
+# if not is_connected:
+#    print("failed.")
