@@ -29,13 +29,13 @@ def send_icmp_with_data():
 
 
 def packet_callback(packet):
-    if ICMP in packet and packet[ICMP].ID == config.ID and packet[ICMP].payload.load.decode('utf-8') != data_to_send:
+    if ICMP in packet and packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode('utf-8') != data_to_send:
         print(packet[ICMP].payload.load.decode('utf-8'))
 
 
 def hello_packet_callback(packet):
     global is_connected
-    if ICMP in packet and packet[ICMP].ID == config.ID and packet[ICMP].payload.load.decode('utf-8') == 'hello':
+    if ICMP in packet and packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode('utf-8') == 'hello':
         is_connected = True
 
 
