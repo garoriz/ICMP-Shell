@@ -5,11 +5,13 @@ import threading
 import time
 
 from scapy.layers.inet import ICMP, IP
-from scapy.sendrecv import send, sniff
+from scapy.layers.l2 import Ether
+from scapy.sendrecv import send, sniff, sendp
 
 import config
 
 is_connected = None
+destination_mac = "ff:ff:ff:ff:ff:ff"
 host = "192.168.0.60"
 data_to_send = None
 
@@ -17,19 +19,22 @@ data_to_send = None
 def send_icmp_with_data():
     global host, data_to_send, is_connected
     data_to_send = 'echo hello'
-    packet = IP(dst=host) / ICMP(id=config.ID) / data_to_send
-    send(packet, verbose=False)
+    packet = Ether(dst=destination_mac) / IP(dst=host) / ICMP(id=config.ID) / data_to_send
+    sendp(packet, verbose=False)
 
     time.sleep(10)
 
     while is_connected:
         data_to_send = input()
-        packet = IP(dst=host) / ICMP(id=config.ID) / data_to_send
-        send(packet, verbose=False)
+        packet = Ether(dst=destination_mac) / IP(dst=host) / ICMP(id=config.ID) / data_to_send
+        sendp(packet, verbose=False)
 
 
 def packet_callback(packet):
+    global destination_mac
+
     if ICMP in packet and packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode('utf-8') != data_to_send:
+        destination_mac = packet[Ether].src
         print(packet[ICMP].payload.load.decode('utf-8'))
 
 
