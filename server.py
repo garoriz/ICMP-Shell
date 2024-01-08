@@ -66,12 +66,10 @@ with Daemonizer() as (is_setup, daemonizer):
         if args.d:
             ish_debug = 0
 
-    is_parent, destination_ip, destination_mac, t1, t2 = daemonizer(
+    is_parent, destination_ip, destination_mac = daemonizer(
         'icmp-shell.pid',
         "",
-        "ff:ff:ff:ff:ff:ff",
-        threading.Thread(target=readstdout),
-        threading.Thread(target=readstderr)
+        "ff:ff:ff:ff:ff:ff"
     )
 
 p = subprocess.Popen(
@@ -82,6 +80,8 @@ p = subprocess.Popen(
     shell=True
 )
 
+t1 = threading.Thread(target=readstdout)
+t2 = threading.Thread(target=readstderr)
 t1.start()
 t2.start()
 sniff(filter="icmp", prn=packet_callback)
