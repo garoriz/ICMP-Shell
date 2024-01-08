@@ -50,7 +50,7 @@ def packet_callback(packet):
         print("-----+ OUT DATA +-----")
         sendcommand(received_data)
 
-with Daemonizer as (is_setup, daemonizer):
+with Daemonizer() as (is_setup, daemonizer):
     if is_setup:
         ish_debug = 1
 
