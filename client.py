@@ -17,7 +17,7 @@ data_to_send = None
 
 
 def send_icmp_with_data():
-    global host, data_to_send, is_connected
+    global host, data_to_send, is_connected, destination_mac
     data_to_send = 'echo hello'
     packet = Ether(dst=destination_mac) / IP(dst=host) / ICMP(id=config.ID) / data_to_send
     sendp(packet, verbose=False)
@@ -26,6 +26,8 @@ def send_icmp_with_data():
 
     while is_connected:
         data_to_send = input()
+        if destination_mac == "00:00:00:00:00:00":
+            destination_mac = "ff:ff:ff:ff:ff:ff"
         packet = Ether(dst=destination_mac) / IP(dst=host) / ICMP(id=config.ID) / data_to_send
         sendp(packet, verbose=False)
 
