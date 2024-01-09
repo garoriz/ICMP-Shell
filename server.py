@@ -12,6 +12,9 @@ import config
 import opening_terminal
 from opening_terminal import p
 
+destination_mac = "ff:ff:ff:ff:ff:ff"
+destination_ip = ""
+is_debug = 1
 
 def readstdout():
     global destination_ip, destination_mac
@@ -63,8 +66,6 @@ def sniff_in_debug():
 
 with Daemonizer() as (is_setup, daemonizer):
     if is_setup:
-        ish_debug = 1
-
         parser = argparse.ArgumentParser(description='ICMP Shell')
 
         parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
@@ -75,17 +76,17 @@ with Daemonizer() as (is_setup, daemonizer):
         if args.i:
             config.ID = args.i
         if args.d:
-            ish_debug = 0
+            is_debug = 0
 
-        if ish_debug:
+        if is_debug:
             sniff_in_debug()
 
-    if ish_debug == 0:
-        is_parent, destination_ip, destination_mac = daemonizer(
-            'icmp-shell.pid',
-            "",
-            "ff:ff:ff:ff:ff:ff"
-        )
+    is_parent, is_debug, destination_mac, destination_ip = daemonizer(
+        'icmp-shell.pid',
+        is_debug,
+        "ff:ff:ff:ff:ff:ff",
+        ""
+    )
 
 p = subprocess.Popen(
     opening_terminal.terminal_name,
@@ -98,7 +99,7 @@ p = subprocess.Popen(
 t1 = threading.Thread(target=readstdout)
 t2 = threading.Thread(target=readstderr)
 
-if ish_debug == 0:
+if is_debug == 0:
     t1.start()
     t2.start()
 
