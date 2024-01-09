@@ -6,7 +6,7 @@ import time
 
 from scapy.layers.inet import ICMP, IP
 from scapy.layers.l2 import Ether
-from scapy.sendrecv import send, sniff, sendp
+from scapy.sendrecv import sniff, sendp
 
 import config
 
@@ -35,14 +35,14 @@ def send_icmp_with_data():
 def packet_callback(packet):
     global destination_mac
 
-    if ICMP in packet and packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode('utf-8') != data_to_send:
+    if packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode('utf-8') != data_to_send:
         destination_mac = packet[Ether].src
         print(packet[ICMP].payload.load.decode('utf-8'))
 
 
 def hello_packet_callback(packet):
     global is_connected
-    if ICMP in packet and packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode('utf-8') == 'hello':
+    if packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode('utf-8') == 'hello':
         is_connected = True
 
 
