@@ -38,7 +38,7 @@ def packet_callback(packet):
     global destination_mac
 
     if hasattr(packet[ICMP].payload, 'load'):
-        if packet[ICMP].ttl == config.TTL and packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode(
+        if packet[IP].ttl == config.TTL and packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode(
                 'utf-8') != data_to_send:
             destination_mac = packet[Ether].src
             print(packet[ICMP].payload.load.decode('utf-8'))
@@ -47,7 +47,7 @@ def packet_callback(packet):
 def hello_packet_callback(packet):
     global is_connected
 
-    if packet[ICMP].ttl == config.TTL and packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode(
+    if packet[IP].ttl == config.TTL and packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode(
             'utf-8') == 'hello':
         is_connected = True
 
