@@ -12,7 +12,7 @@ from opening_terminal import p
 
 destination_mac = "ff:ff:ff:ff:ff:ff"
 destination_ip = ""
-is_debug = 1
+is_debug = 0
 
 
 def readstdout():
