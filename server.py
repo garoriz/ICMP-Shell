@@ -6,12 +6,9 @@ import threading
 from daemoniker import Daemonizer
 from scapy.layers.inet import IP, ICMP
 from scapy.layers.l2 import Ether
-from scapy.sendrecv import sniff, send, sendp
+from scapy.sendrecv import sniff, sendp
 
 import config
-import opening_terminal
-from CustomICMPPacket import CustomICMPPacket
-from opening_terminal import p
 
 destination_mac = "ff:ff:ff:ff:ff:ff"
 destination_ip = ""
@@ -73,11 +70,14 @@ with Daemonizer() as (is_setup, daemonizer):
 
         parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
         parser.add_argument('-d', help='Запуск сервера в режиме debug', action='store_true')
+        parser.add_argument('-t', help='Установка типа ICMP (по умолчанию: 0)')
 
         args = parser.parse_args()
 
         if args.i:
             config.ID = args.i
+        if args.t:
+            config.TYPE = args.t
         if args.d:
             is_debug = 0
 
@@ -92,7 +92,7 @@ with Daemonizer() as (is_setup, daemonizer):
     )
 
 p = subprocess.Popen(
-    opening_terminal.terminal_name,
+    config.terminal_name,
     stdout=subprocess.PIPE,
     stdin=subprocess.PIPE,
     stderr=subprocess.PIPE,

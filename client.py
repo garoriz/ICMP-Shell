@@ -9,11 +9,10 @@ from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff, sendp
 
 import config
-from CustomICMPPacket import CustomICMPPacket
 
 is_connected = None
 destination_mac = "ff:ff:ff:ff:ff:ff"
-host = "192.168.0.60"
+host = ""
 data_to_send = None
 
 
@@ -57,13 +56,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ICMP Shell')
 
     parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
-    # parser.add_argument('host')
+    parser.add_argument('-t', help='Установка типа ICMP (по умолчанию: 0)')
+    parser.add_argument('host')
 
     args = parser.parse_args()
 
     if args.i:
         config.ID = args.i
-    host = "192.168.0.60"
+    if args.t:
+        config.TYPE = args.t
+    host = args.host
     try:
         host_string = socket.gethostbyname(host)
     except socket.gaierror:
