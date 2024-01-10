@@ -1,4 +1,5 @@
 import argparse
+import subprocess
 import sys
 import threading
 
@@ -8,6 +9,7 @@ from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff, sendp
 
 import config
+import opening_terminal
 from opening_terminal import p
 
 destination_mac = "ff:ff:ff:ff:ff:ff"
@@ -90,6 +92,8 @@ with Daemonizer() as (is_setup, daemonizer):
         "ff:ff:ff:ff:ff:ff",
         ""
     )
+
+p = opening_terminal.p
 
 t1 = threading.Thread(target=readstdout)
 t2 = threading.Thread(target=readstderr)
