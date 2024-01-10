@@ -79,7 +79,7 @@ with Daemonizer() as (is_setup, daemonizer):
         if args.t:
             config.TYPE = args.t
         if args.d:
-            is_debug = 0
+            is_debug = 1
 
         if is_debug:
             sniff_in_debug()
