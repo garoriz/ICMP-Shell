@@ -41,7 +41,7 @@ def packet_callback(packet):
     if hasattr(packet[ICMP].payload, 'load'):
         if packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode(
                 'utf-8') != data_to_send:
-            # destination_mac = packet[Ether].src
+            destination_mac = packet[Ether].src
             print(packet[ICMP].payload.load.decode('utf-8'))
 
 
