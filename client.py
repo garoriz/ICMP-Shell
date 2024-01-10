@@ -20,7 +20,7 @@ data_to_send = None
 def send_icmp_with_data():
     global host, data_to_send, is_connected, destination_mac
     data_to_send = 'echo hello'
-    packet = Ether(dst=destination_mac) / IP(dst=host) / CustomICMPPacket(ish_type=0) / ICMP(id=config.ID, type=config.TYPE) / data_to_send
+    packet = Ether(dst=destination_mac) / IP(dst=host) / ICMP(id=config.ID, type=config.TYPE) / data_to_send
     sendp(packet, verbose=False)
 
     time.sleep(10)
@@ -38,7 +38,7 @@ def packet_callback(packet):
     global destination_mac
 
     if hasattr(packet[ICMP].payload, 'load'):
-        if packet[CustomICMPPacket].ish_type == 1 and packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode(
+        if packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode(
                 'utf-8') != data_to_send:
             destination_mac = packet[Ether].src
             print(packet[ICMP].payload.load.decode('utf-8'))
