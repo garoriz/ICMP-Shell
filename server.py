@@ -93,7 +93,13 @@ with Daemonizer() as (is_setup, daemonizer):
         ""
     )
 
-p = opening_terminal.p
+p = subprocess.Popen(
+    opening_terminal.terminal_name,
+    stdout=subprocess.PIPE,
+    stdin=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    shell=True
+)
 
 t1 = threading.Thread(target=readstdout)
 t2 = threading.Thread(target=readstderr)
