@@ -30,8 +30,8 @@ def send_icmp_with_data():
         data_to_send = input()
         if destination_mac == "00:00:00:00:00:00":
             destination_mac = "ff:ff:ff:ff:ff:ff"
-        packet = Ether(dst=destination_mac) / IP(dst=host) / ICMP(id=config.ID,
-                                                                  type=config.TYPE) / data_to_send
+        packet = Ether(dst=destination_mac) / IP(dst=host) / ICMP(id=config.ID, type=config.TYPE,
+                                                                  code=config.REQUEST_CODE) / data_to_send
         sendp(packet, verbose=False)
 
 
