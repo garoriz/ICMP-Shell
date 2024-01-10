@@ -35,9 +35,10 @@ def send_icmp_with_data():
 def packet_callback(packet):
     global destination_mac
 
-    if packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode('utf-8') != data_to_send:
-        destination_mac = packet[Ether].src
-        print(packet[ICMP].payload.load.decode('utf-8'))
+    if hasattr(packet[ICMP].payload, 'load'):
+        if packet[ICMP].id == config.ID and packet[ICMP].payload.load.decode('utf-8') != data_to_send:
+            destination_mac = packet[Ether].src
+            print(packet[ICMP].payload.load.decode('utf-8'))
 
 
 def hello_packet_callback(packet):
