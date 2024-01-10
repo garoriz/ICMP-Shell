@@ -1,5 +1,4 @@
 import argparse
-import subprocess
 import sys
 import threading
 
@@ -9,6 +8,7 @@ from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff, sendp
 
 import config
+from opening_terminal import p
 
 destination_mac = "ff:ff:ff:ff:ff:ff"
 destination_ip = ""
@@ -90,14 +90,6 @@ with Daemonizer() as (is_setup, daemonizer):
         "ff:ff:ff:ff:ff:ff",
         ""
     )
-
-p = subprocess.Popen(
-    config.terminal_name,
-    stdout=subprocess.PIPE,
-    stdin=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    shell=True
-)
 
 t1 = threading.Thread(target=readstdout)
 t2 = threading.Thread(target=readstderr)
