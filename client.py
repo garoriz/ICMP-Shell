@@ -38,8 +38,7 @@ def packet_callback(packet):
     global destination_mac
 
     if hasattr(packet[ICMP].payload, 'load'):
-        if (packet[IP].src == host and packet[ICMP].code == config.RESPONSE_CODE and packet[ICMP].id == config.ID and
-                packet[ICMP].type == config.TYPE):
+        if packet[IP].src == host and packet[ICMP].code == config.RESPONSE_CODE and packet[ICMP].id == config.ID:
             destination_mac = packet[Ether].src
             print(packet[ICMP].payload.load.decode('utf-8'))
 
