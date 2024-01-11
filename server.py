@@ -84,7 +84,6 @@ with Daemonizer() as (is_setup, daemonizer):
             is_debug = 1
 
         if is_debug:
-            get_ip_addresses()
             sniff_in_debug()
 
     is_parent, is_debug, destination_mac, destination_ip = daemonizer(
