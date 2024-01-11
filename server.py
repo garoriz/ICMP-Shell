@@ -7,7 +7,6 @@ from daemoniker import Daemonizer
 from scapy.layers.inet import IP, ICMP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff, sendp
-from netifaces import interfaces, ifaddresses, AF_INET
 
 import config
 import opening_terminal
