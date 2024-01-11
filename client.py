@@ -13,7 +13,6 @@ import config
 is_connected = None
 destination_mac = "ff:ff:ff:ff:ff:ff"
 host = ""
-data_to_send = None
 hello_message = "Trying to connect a new client"
 
 
@@ -40,7 +39,7 @@ def packet_callback(packet):
 
     if hasattr(packet[ICMP].payload, 'load'):
         if (packet[IP].src == host and packet[ICMP].code == config.RESPONSE_CODE and packet[ICMP].id == config.ID and
-                packet[ICMP].type == config.TYPE and packet[ICMP].payload.load.decode('utf-8') != data_to_send):
+                packet[ICMP].type == config.TYPE):
             destination_mac = packet[Ether].src
             print(packet[ICMP].payload.load.decode('utf-8'))
 
