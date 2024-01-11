@@ -62,9 +62,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.i:
-        config.ID = args.i
+        config.ID = int(args.i)
     if args.t:
-        config.TYPE = args.t
+        config.TYPE = int(args.t)
     host = args.host
     try:
         host_string = socket.gethostbyname(host)
