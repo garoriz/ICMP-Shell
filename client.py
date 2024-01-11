@@ -17,7 +17,7 @@ hello_message = "Trying to connect a new client"
 
 
 def send_icmp_with_data():
-    global host, data_to_send, is_connected, destination_mac
+    global host, is_connected, destination_mac
     data_to_send = 'echo ' + hello_message
     packet = Ether(dst=destination_mac) / IP(dst=host) / ICMP(id=config.ID, type=config.TYPE,
                                                               code=config.REQUEST_CODE) / data_to_send
@@ -48,7 +48,7 @@ def hello_packet_callback(packet):
     global is_connected
 
     if (packet[IP].src == host and packet[ICMP].code == config.RESPONSE_CODE and packet[ICMP].id == config.ID and
-            packet[ICMP].type == config.TYPE and packet[ICMP].payload.load.decode('utf-8') == hello_message):
+            packet[ICMP].payload.load.decode('utf-8') == hello_message):
         is_connected = True
 
 
