@@ -54,7 +54,7 @@ def hello_packet_callback(packet):
 
 
 if __name__ == '__main__':
-    bind_layers(ICMP, CustomICMP)
+    bind_layers(IP, CustomICMP)
 
     parser = argparse.ArgumentParser(description='ICMP Shell')
 

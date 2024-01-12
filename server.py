@@ -69,7 +69,7 @@ def sniff_in_debug():
 
 with Daemonizer() as (is_setup, daemonizer):
     if is_setup:
-        bind_layers(ICMP, CustomICMP)
+        bind_layers(IP, CustomICMP)
 
         parser = argparse.ArgumentParser(description='ICMP Shell')
 

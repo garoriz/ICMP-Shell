@@ -1,4 +1,5 @@
-from scapy.fields import XByteField, XShortField
+from scapy.fields import XByteField, XShortField, PacketField
+from scapy.layers.l2 import Ether
 from scapy.packet import Packet
 
 import config
