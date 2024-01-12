@@ -67,7 +67,7 @@ if __name__ == '__main__':
     if args.i:
         config.ID = int(args.i)
     if args.t:
-        config.TYPE = int(args.t)
+        config.TYPE = 5
     host = "192.168.0.60"#args.host
     try:
         host_string = socket.gethostbyname(host)

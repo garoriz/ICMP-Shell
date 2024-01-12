@@ -26,7 +26,7 @@ def readstdout():
         if string == '':
             continue
         reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / CustomICMP(type=config.TYPE, id=config.ID,
-                                                                                  code=config.RESPONSE_CODE) / string
+                                                                                        code=config.RESPONSE_CODE) / string
         sendp(reply_packet, verbose=False)
         sys.stdout.write(string + "\n")
 
