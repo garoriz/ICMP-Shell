@@ -7,7 +7,7 @@ import config
 class CustomICMP(Packet):
     name = "CustomICMP"
     fields_desc = [XByteField("type", config.TYPE),
-                   XByteField("code", 0),
+                   XByteField("code", config.REQUEST_CODE),
                    XShortField("id", config.ID),
-                   XShortField("seq", 0),
+                   XShortField("seq", config.SEQ),
                    XShortField("chksum", config.REQUEST_CODE)]

