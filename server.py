@@ -4,7 +4,7 @@ import sys
 import threading
 
 from daemoniker import Daemonizer
-from scapy.layers.inet import IP, ICMP
+from scapy.layers.inet import IP
 from scapy.layers.l2 import Ether
 from scapy.packet import bind_layers
 from scapy.sendrecv import sniff, sendp
