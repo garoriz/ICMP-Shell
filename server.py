@@ -114,4 +114,4 @@ if is_debug == 0:
     t1.start()
     t2.start()
 
-    sniff(filter="icmp", prn=packet_callback)
+    sniff(prn=packet_callback)
