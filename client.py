@@ -7,7 +7,7 @@ import time
 from scapy.layers.inet import IP
 from scapy.layers.l2 import Ether
 from scapy.packet import bind_layers
-from scapy.sendrecv import sniff, sendp
+from scapy.sendrecv import sniff, sendp, send
 
 import config
 from CustomICMP import CustomICMP
@@ -23,20 +23,18 @@ def send_icmp_with_data():
     global host, is_connected, destination_mac
     data_to_send = 'echo ' + hello_message
     packet_bytes = bytes(CustomICMP(code=config.REQUEST_CODE) / data_to_send)
-    packet = (Ether(dst=destination_mac) / IP(dst=host) /
+    packet = (IP(dst=host) /
               CustomICMP(code=config.REQUEST_CODE, chksum=calc_checksum(packet_bytes)) / data_to_send)
-    sendp(packet, verbose=False)
+    send(packet, verbose=False)
 
     time.sleep(10)
 
     while is_connected:
         data_to_send = input()
-        if destination_mac == "00:00:00:00:00:00":
-            destination_mac = "ff:ff:ff:ff:ff:ff"
         packet_bytes = bytes(CustomICMP(code=config.REQUEST_CODE) / data_to_send)
-        packet = (Ether(dst=destination_mac) / IP(dst=host) /
+        packet = (IP(dst=host) /
                   CustomICMP(code=config.REQUEST_CODE, chksum=calc_checksum(packet_bytes)) / data_to_send)
-        sendp(packet, verbose=False)
+        send(packet, verbose=False)
 
 
 def packet_callback(packet):
@@ -45,12 +43,11 @@ def packet_callback(packet):
     if packet.haslayer(CustomICMP):
         if (hasattr(packet[CustomICMP].payload, 'load') and packet[CustomICMP].code == config.RESPONSE_CODE and
                 packet[CustomICMP].id == config.ID):
-            destination_mac = packet[Ether].src
             print(packet[CustomICMP].payload.load.decode('utf-8'))
 
 
 def hello_packet_callback(packet):
-    global is_connected
+    global is_connected, destination_mac
 
     if packet.haslayer(CustomICMP):
         if (packet[CustomICMP].code == config.RESPONSE_CODE and
