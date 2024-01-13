@@ -39,8 +39,8 @@ def readstderr():
         if string == '':
             continue
         packet_bytes = bytes(CustomICMP() / string)
-        reply_packet = (Ether(dst=destination_mac) / IP(dst=destination_ip) / ICMP(chksum=calc_checksum(packet_bytes)) /
-                        string)
+        reply_packet = (Ether(dst=destination_mac) / IP(dst=destination_ip) /
+                        CustomICMP(chksum=calc_checksum(packet_bytes)) / string)
         sendp(reply_packet, verbose=False)
         sys.stderr.write(string + "\n")
 

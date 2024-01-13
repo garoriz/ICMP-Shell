@@ -49,9 +49,10 @@ def packet_callback(packet):
 def hello_packet_callback(packet):
     global is_connected
 
-    if (packet[IP].src == host and packet[CustomICMP].id == config.ID and
-            packet[CustomICMP].payload.load.decode('utf-8') == hello_message):
-        is_connected = True
+    if packet.haslayer(CustomICMP):
+        if (packet[IP].src == host and packet[CustomICMP].id == config.ID and
+                packet[CustomICMP].payload.load.decode('utf-8') == hello_message):
+            is_connected = True
 
 
 if __name__ == '__main__':
