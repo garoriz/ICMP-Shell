@@ -10,4 +10,4 @@ class CustomICMP(Packet):
                    XByteField("code", 0),
                    XShortField("id", config.ID),
                    XShortField("seq", 0),
-                   XShortField("chksum", 0)]
+                   XShortField("chksum", config.REQUEST_CODE)]

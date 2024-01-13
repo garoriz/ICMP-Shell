@@ -50,7 +50,8 @@ def hello_packet_callback(packet):
     global is_connected
 
     if packet.haslayer(CustomICMP):
-        if (packet[IP].src == host and packet[CustomICMP].id == config.ID and
+        if (packet[IP].src == host and packet[CustomICMP].code == config.RESPONSE_CODE and
+                packet[CustomICMP].id == config.ID and
                 packet[CustomICMP].payload.load.decode('utf-8') == hello_message):
             is_connected = True
 
