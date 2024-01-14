@@ -69,6 +69,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.i:
+        if args.i < 0 and args.t > 65535:
+            print("Идентификатор должен быть от 0 до 65535")
+            exit()
         config.ID = int(args.i)
     if args.t:
         config.TYPE = int(args.t)
