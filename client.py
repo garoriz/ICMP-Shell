@@ -64,15 +64,15 @@ if __name__ == '__main__':
 
     parser.add_argument('-i', help='Назначение идентификатора процесса (диапазон: 0-65535; по-умолчанию 1515)')
     parser.add_argument('-t', help='Установка типа ICMP (по умолчанию: 0)')
-    # parser.add_argument('host')
+    parser.add_argument('host')
 
     args = parser.parse_args()
 
     if args.i:
         config.ID = int(args.i)
     if args.t:
-        config.TYPE = 5
-    host = "192.168.0.60"  # args.host
+        config.TYPE = int(args.t)
+    host = args.host
     try:
         host_string = socket.gethostbyname(host)
     except socket.gaierror:
