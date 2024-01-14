@@ -27,12 +27,14 @@ def readstdout():
         if string == '':
             continue
         config.SEQ = config.SEQ + 1
-        packet_bytes = bytes(CustomICMP(seq=config.SEQ, code=config.RESPONSE_CODE, id=config.ID) / string)
+        packet_bytes = bytes(CustomICMP(seq=config.SEQ, code=config.RESPONSE_CODE, id=config.ID, type=config.TYPE) /
+                             string)
         reply_packet = (Ether(dst=destination_mac) / IP(dst=destination_ip) /
                         CustomICMP(
                             seq=config.SEQ,
                             code=config.RESPONSE_CODE,
                             chksum=calc_checksum(packet_bytes),
+                            type=config.TYPE,
                             id=config.ID
                         ) / string)
         sendp(reply_packet, verbose=False)
@@ -46,12 +48,14 @@ def readstderr():
         if string == '':
             continue
         config.SEQ = config.SEQ + 1
-        packet_bytes = bytes(CustomICMP(seq=config.SEQ, code=config.RESPONSE_CODE, id=config.ID) / string)
+        packet_bytes = bytes(CustomICMP(seq=config.SEQ, code=config.RESPONSE_CODE, id=config.ID, type=config.TYPE) /
+                             string)
         reply_packet = (Ether(dst=destination_mac) / IP(dst=destination_ip) /
                         CustomICMP(
                             seq=config.SEQ,
                             code=config.RESPONSE_CODE,
                             chksum=calc_checksum(packet_bytes),
+                            type=config.TYPE,
                             id=config.ID) / string)
         sendp(reply_packet, verbose=False)
         sys.stderr.write(string + "\n")

@@ -45,6 +45,7 @@ def packet_callback(packet):
         if (packet[IP].src == host and hasattr(packet[CustomICMP].payload, 'load') and
                 packet[CustomICMP].code == config.RESPONSE_CODE and packet[CustomICMP].id == config.ID):
             print(packet[CustomICMP].payload.load.decode('utf-8'))
+            print(packet[CustomICMP].type)
 
 
 def hello_packet_callback(packet):
@@ -55,6 +56,7 @@ def hello_packet_callback(packet):
                 packet[CustomICMP].id == config.ID and
                 packet[CustomICMP].payload.load.decode('utf-8') == hello_message):
             destination_mac = packet[Ether].src
+            print(packet[CustomICMP].type)
             is_connected = True
 
 
