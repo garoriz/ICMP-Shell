@@ -94,7 +94,7 @@ with Daemonizer() as (is_setup, daemonizer):
             if i < 0 or i < 65535:
                 print("Идентификатор должен быть от 0 до 65535")
                 sys.exit()
-            config.ID = int(args.i)
+            config.ID = i
         if args.t:
             config.TYPE = int(args.t)
         if args.d:
