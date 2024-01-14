@@ -114,12 +114,16 @@ with Daemonizer() as (is_setup, daemonizer):
         if is_debug:
             sniff_in_debug()
 
-    is_parent, is_debug, destination_mac, destination_ip = daemonizer(
+    is_parent, is_debug, destination_mac, destination_ip, config.ID, config.TYPE = daemonizer(
         'icmp-shell.pid',
         is_debug,
         "ff:ff:ff:ff:ff:ff",
-        ""
+        "",
+        config.ID,
+        config.TYPE
     )
+
+bind_layers(IP, CustomICMP)
 
 p = subprocess.Popen(
     opening_terminal.terminal_name,
