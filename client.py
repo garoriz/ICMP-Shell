@@ -22,18 +22,19 @@ hello_message = "Trying to connect a new client"
 def send_icmp_with_data():
     global host, is_connected, destination_mac
     data_to_send = 'echo ' + hello_message
-    packet_bytes = bytes(CustomICMP(code=config.REQUEST_CODE) / data_to_send)
+    packet_bytes = bytes(CustomICMP(type=config.TYPE, id=config.ID) / data_to_send)
     packet = (Ether(dst=destination_mac) / IP(dst=host) /
-              CustomICMP(code=config.REQUEST_CODE, chksum=calc_checksum(packet_bytes)) / data_to_send)
+              CustomICMP(type=config.TYPE, id=config.ID, chksum=calc_checksum(packet_bytes)) /
+              data_to_send)
     sendp(packet, verbose=False)
 
     time.sleep(10)
 
     while is_connected:
         data_to_send = input()
-        packet_bytes = bytes(CustomICMP() / data_to_send)
+        packet_bytes = bytes(CustomICMP(type=config.TYPE, id=config.ID) / data_to_send)
         packet = (Ether(dst=destination_mac) / IP(dst=host) /
-                  CustomICMP(chksum=calc_checksum(packet_bytes)) / data_to_send)
+                  CustomICMP(type=config.TYPE, id=config.ID, chksum=calc_checksum(packet_bytes)) / data_to_send)
         sendp(packet, verbose=False)
 
 
