@@ -7,7 +7,7 @@ import time
 from scapy.layers.inet import IP
 from scapy.layers.l2 import Ether
 from scapy.packet import bind_layers
-from scapy.sendrecv import sniff, sendp, send
+from scapy.sendrecv import sniff, sendp
 
 import config
 from CustomICMP import CustomICMP
@@ -24,16 +24,16 @@ def send_icmp_with_data():
     data_to_send = 'echo ' + hello_message
     packet_bytes = bytes(CustomICMP(code=config.REQUEST_CODE) / data_to_send)
     packet = (Ether(dst=destination_mac) / IP(dst=host) /
-              CustomICMP(chksum=calc_checksum(packet_bytes)) / data_to_send)
+              CustomICMP(code=config.REQUEST_CODE, chksum=calc_checksum(packet_bytes)) / data_to_send)
     sendp(packet, verbose=False)
 
     time.sleep(10)
 
     while is_connected:
         data_to_send = input()
-        packet_bytes = bytes(CustomICMP(code=config.REQUEST_CODE) / data_to_send)
+        packet_bytes = bytes(CustomICMP() / data_to_send)
         packet = (Ether(dst=destination_mac) / IP(dst=host) /
-                  CustomICMP(code=config.REQUEST_CODE, chksum=calc_checksum(packet_bytes)) / data_to_send)
+                  CustomICMP(chksum=calc_checksum(packet_bytes)) / data_to_send)
         sendp(packet, verbose=False)
 
 
@@ -42,7 +42,7 @@ def packet_callback(packet):
 
     if packet.haslayer(CustomICMP):
         if (packet[IP].src == host and hasattr(packet[CustomICMP].payload, 'load') and
-                packet[CustomICMP].id == config.ID):
+                packet[CustomICMP].code == config.RESPONSE_CODE and packet[CustomICMP].id == config.ID):
             print(packet[CustomICMP].payload.load.decode('utf-8'))
 
 
@@ -50,7 +50,8 @@ def hello_packet_callback(packet):
     global is_connected, destination_mac
 
     if packet.haslayer(CustomICMP):
-        if (packet[IP].src == host and packet[CustomICMP].id == config.ID and
+        if (packet[IP].src == host and packet[CustomICMP].code == config.RESPONSE_CODE and
+                packet[CustomICMP].id == config.ID and
                 packet[CustomICMP].payload.load.decode('utf-8') == hello_message):
             destination_mac = packet[Ether].src
             is_connected = True
