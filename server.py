@@ -57,8 +57,7 @@ def sendcommand(cmd):
 def packet_callback(packet):
     global destination_ip, destination_mac
     if packet.haslayer(CustomICMP):
-        if ((packet[Ether].dst == get_mac() or packet[Ether].dst == "ff:ff:ff:ff:ff:ff") and
-                packet[CustomICMP].code == config.REQUEST_CODE and packet[CustomICMP].id == config.ID):
+        if (packet[CustomICMP].code == config.REQUEST_CODE and packet[CustomICMP].id == config.ID):
             destination_mac = packet[Ether].src
             destination_ip = packet[IP].src
             received_data = packet[CustomICMP].payload.load.decode('utf-8')
