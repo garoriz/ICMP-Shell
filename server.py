@@ -90,11 +90,7 @@ with Daemonizer() as (is_setup, daemonizer):
         args = parser.parse_args()
 
         if args.i:
-            i = int(args.i)
-            if 0 > i > 65535:
-                print("Идентификатор должен быть от 0 до 65535")
-                exit()
-            config.ID = i
+            config.ID = int(args.i)
         if args.t:
             config.TYPE = int(args.t)
         if args.d:
