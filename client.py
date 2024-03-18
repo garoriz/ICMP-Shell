@@ -17,7 +17,6 @@ is_connected = None
 destination_mac = "ff:ff:ff:ff:ff:ff"
 host = ""
 hello_message = "Trying to connect a new client"
-divider = "-----------------------------------------"
 
 
 def send_icmp_with_data():
@@ -33,7 +32,6 @@ def send_icmp_with_data():
 
     while is_connected:
         data_to_send = input()
-        print(divider)
         packet_bytes = bytes(CustomICMP(type=config.TYPE, id=config.ID) / data_to_send)
         packet = (Ether(dst=destination_mac) / IP(dst=host) /
                   CustomICMP(type=config.TYPE, id=config.ID, chksum=calc_checksum(packet_bytes)) / data_to_send)
@@ -97,5 +95,4 @@ if __name__ == '__main__':
         print("failed.")
     elif is_connected:
         print("done.")
-        print(divider)
         sniff(prn=packet_callback)
