@@ -7,6 +7,8 @@ if os_name == "Windows":
     terminal_name = "cmd.exe"
 if os_name == "Linux":
     terminal_name = "bash"
+if os_name == "":
+    terminal_name = "bash"
 
 p = subprocess.Popen(
     terminal_name,
