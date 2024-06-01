@@ -1,7 +1,7 @@
 import platform
 import subprocess
 
-terminal_name = "bash"
+terminal_name = "/bin/sh"
 os_name = platform.system()
 if os_name == "Windows":
     terminal_name = "cmd.exe"
